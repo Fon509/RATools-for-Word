@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+    <ribbon startFromScratch="false">
+        <tabs>
+            <!-- ==================== 主选项卡 ==================== -->
+            <tab id="RATool" label="RA工具箱">
+
+                <!-- == 模板加载 == -->
+                <group id="grpLogo" label="模板">
+                    <button id="btnLogo"
+                            label="点击加载"
+                            image="Logo"
+                            size="large"
+                            description="为当前文档附加主样式模板"
+                            screentip="为当前文档附加主样式模板"
+                            onAction="AttachTemplate"/>
+                </group>
+
+                <!-- == 编号标题 1-9 == -->
+                <group id="grpHeading" label="编号标题">
+                    <!-- 编号标题 1-3 -->
+                    <box id="boxHeading1" boxStyle="horizontal">
+                        <button id="btnNH1" label="标题1-F" tag="标题1-F" image="H1" size="normal" description="应用样式 标题1-F" screentip="标题1-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnNH2" label="标题2-F" tag="标题2-F" image="H2" size="normal" description="应用样式 标题2-F" screentip="标题2-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnNH3" label="标题3-F" tag="标题3-F" image="H3" size="normal" description="应用样式 标题3-F" screentip="标题3-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <!-- 编号标题 4-6 -->
+                    <box id="boxHeading2" boxStyle="horizontal">
+                        <button id="btnNH4" label="标题4-F" tag="标题4-F" image="H4" size="normal" description="应用样式 标题4-F" screentip="标题4-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnNH5" label="标题5-F" tag="标题5-F" image="H5" size="normal" description="应用样式 标题5-F" screentip="标题5-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnNH6" label="标题6-F" tag="标题6-F" image="H6" size="normal" description="应用样式 标题6-F" screentip="标题6-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <!-- 编号标题 7-9 -->
+                    <box id="boxHeading3" boxStyle="horizontal">
+                        <button id="btnNH7" label="标题7-F" tag="标题7-F" image="H7" size="normal" description="应用样式 标题7-F" screentip="标题7-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnNH8" label="标题8-F" tag="标题8-F" image="H8" size="normal" description="应用样式 标题8-F" screentip="标题8-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnNH9" label="标题9-F" tag="标题9-F" image="H9" size="normal" description="应用样式 标题9-F" screentip="标题9-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                </group>
+
+                <!-- == 无编号标题 1-9 == -->
+                <group id="grpUnHeading" label="无编号标题">
+                    <!-- 无编号标题 1-3 -->
+                    <box id="boxUnHeading1" boxStyle="horizontal">
+                        <button id="btnUNH1" label="无编号标题1-F" tag="无编号标题1-F" image="UNH1" size="normal" description="应用样式 无编号标题1-F" screentip="无编号标题1-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnUNH2" label="无编号标题2-F" tag="无编号标题2-F" image="UNH2" size="normal" description="应用样式 无编号标题2-F" screentip="无编号标题2-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnUNH3" label="无编号标题3-F" tag="无编号标题3-F" image="UNH3" size="normal" description="应用样式 无编号标题3-F" screentip="无编号标题3-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <!-- 无编号标题 4-6 -->
+                    <box id="boxUnHeading2" boxStyle="horizontal">
+                        <button id="btnUNH4" label="无编号标题4-F" tag="无编号标题4-F" image="UNH4" size="normal" description="应用样式 无编号标题4-F" screentip="无编号标题4-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnUNH5" label="无编号标题5-F" tag="无编号标题5-F" image="UNH5" size="normal" description="应用样式 无编号标题5-F" screentip="无编号标题5-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnUNH6" label="无编号标题6-F" tag="无编号标题6-F" image="UNH6" size="normal" description="应用样式 无编号标题6-F" screentip="无编号标题6-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <!-- 无编号标题 7-9 -->
+                    <box id="boxUnHeading3" boxStyle="horizontal">
+                        <button id="btnUNH7" label="无编号标题7-F" tag="无编号标题7-F" image="UNH7" size="normal" description="应用样式 无编号标题7-F" screentip="无编号标题7-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnUNH8" label="无编号标题8-F" tag="无编号标题8-F" image="UNH8" size="normal" description="应用样式 无编号标题8-F" screentip="无编号标题8-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnUNH9" label="无编号标题9-F" tag="无编号标题9-F" image="UNH9" size="normal" description="应用样式 无编号标题9-F" screentip="无编号标题9-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                </group>
+
+                <!-- == 字体和段落 == -->
+                <group id="grpFaP" label="字体和段落">
+                    <box id="boxFormat1" boxStyle="horizontal">
+						<button idMso="ClearFormatting" showLabel="false"/>
+					</box>
+                    <box id="boxFormat2" boxStyle="horizontal">
+						<control idMso="FormatPainter" showLabel="false"/>
+                    </box>
+					<box id="boxFormat3" boxStyle="horizontal">
+						<button idMso="PasteSpecialDialog" showLabel="false"/>
+                    </box>
+					<separator id="sepFaP1"/>
+                    <box id="boxFont1" boxStyle="horizontal">
+                        <toggleButton idMso="Subscript"/>
+                        <control idMso="FontColorPicker" showLabel="false"/>
+					</box>
+					<box id="boxFont2" boxStyle="horizontal">
+                        <toggleButton idMso="Superscript"/>
+						<control idMso="TextHighlightColorPicker" showLabel="false"/>
+                    </box>
+                    <box id="boxFont3" boxStyle="horizontal">
+						<button idMso="FontDialog" showLabel="false"/>
+						<gallery idMso="ChangeCaseGallery" showLabel="false"/>
+                    </box>
+					<separator id="sepFaP2"/>
+					<box id="boxParagraph1" boxStyle="horizontal">
+						<splitButton id="sbAlign" size="normal">
+							<button id="sbAlignBtn" imageMso="AlignCenter"   onAction="AlignCenter_Click"/>
+							<menu id="sbAlignMenu">
+								<button id="sbLeft"   imageMso="AlignLeft"   label="左对齐"   onAction="AlignLeft_Click"/>
+								<button id="sbCenter" imageMso="AlignCenter" label="居中"     onAction="AlignCenter_Click"/>
+								<button id="sbRight"  imageMso="AlignRight"  label="右对齐"   onAction="AlignRight_Click"/>
+								<button id="sbJustify" imageMso="AlignJustify" label="两端对齐" onAction="AlignJustify_Click"/>
+							</menu>
+						</splitButton>
+					</box>
+					<box id="boxParagraph2" boxStyle="horizontal">
+						<button  idMso="ParagraphDialog" showLabel="false"/>
+					</box>
+                </group>
+				
+                <!-- == 基础样式 == -->
+                <group id="grpBasicStyle" label="基础样式">
+                    <box id="boxBS1" boxStyle="horizontal">
+                        <button id="btnBS1" label="标题居中-F" tag="标题居中-F" image="TitleCenter" size="normal" description="应用样式 标题居中-F" screentip="标题居中-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnBS2" label="标题左对齐-F" tag="标题左对齐-F" image="TitleLeft" size="normal" description="应用样式 标题左对齐-F" screentip="标题左对齐-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnBS3" label="目录标题-F" tag="目录标题-F" image="ToCHeading" size="normal" description="应用样式 目录标题-F" screentip="目录标题-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxBS2" boxStyle="horizontal">
+                        <button id="btnBS4" label="正文-F" tag="正文-F" image="BodyText" size="normal" description="应用样式 正文-F" screentip="正文-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnBS5" label="正文无缩进-F" tag="正文无缩进-F" image="BodyTextNoIndentation" size="normal" description="应用样式 正文无缩进-F" screentip="正文无缩进-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnBS6" label="正文无间距-F" tag="正文无间距-F" image="TableNoSpace" size="normal" description="应用样式 正文无间距-F" screentip="正文无间距-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxBS3" boxStyle="horizontal">
+                        <button id="btnFootNoteStyle" label="脚注-F " tag="脚注-F " imageMso="FootnotesEndnotesShow" size="normal" description="应用样式 脚注-F " screentip="脚注-F " showLabel="false" onAction="btnStyle_Click"/>
+						<button id="btnBS7" label="超链接-F" tag="超链接-F" image="Hyperlink" size="normal" description="应用样式 超链接-F" screentip="超链接蓝色-F" showLabel="false" onAction="btnStyle_Click"/>
+						<button id="btnStylePane" label="样式窗格" tag="样式窗格" imageMso="GroupBlogStyles" size="normal" description="显示/隐藏样式任务窗格 (Alt+Ctrl+Shift+S)" screentip="样式窗格" showLabel="false" onAction="ShowStylePane"/>
+                    </box>
+                </group>
+				
+                <!-- == 表格样式 == -->
+                <group id="grpTable" label="表格">
+                    <box id="boxT1" boxStyle="horizontal">
+                        <button id="btnT1" label="表头左对齐-F" tag="表头左对齐-F" imageMso="TextBoxAlignTopLeft" size="normal" description="应用样式 表头左对齐-F" screentip="表头左对齐-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnT2" label="表头居中-F" tag="表头居中-F" imageMso="TextBoxAlignTopCenter" size="normal" description="应用样式 表头居中-F" screentip="表头居中-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnT3" label="表头右对齐-F" tag="表头右对齐-F" imageMso="TextBoxAlignTopRight" size="normal" description="应用样式 表头右对齐-F" screentip="表头右对齐-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxT2" boxStyle="horizontal">
+                        <button id="btnT4" label="表格文本左对齐-F" tag="表格文本左对齐-F" imageMso="TextBoxAlignMiddleLeft" size="normal" description="应用样式 表格文本左对齐-F" screentip="表格文本左对齐-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnT5" label="表格文本居中-F" tag="表格文本居中-F" imageMso="TextBoxAlignMiddleCenter" size="normal" description="应用样式 表格文本居中-F" screentip="表格文本居中-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnT6" label="表格文本右对齐-F" tag="表格文本右对齐-F" imageMso="TextBoxAlignMiddleLeft" size="normal" description="应用样式 表格文本右对齐-F" screentip="表格文本右对齐-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxT3" boxStyle="horizontal">
+                        <button id="btnT7" label="表格文本无间距-F" tag="表格文本无间距-F" image="TableNoSpace" size="normal" description="应用样式 表格文本无间距-F" screentip="表格文本无间距-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnT8" label="表格注释-F" tag="表格注释-F" imageMso="FootnotesEndnotesShow" size="normal" description="应用样式 表格注释-F" screentip="表格注释-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <separator id="sepTable1"/>
+                    <box id="boxT4" boxStyle="horizontal">
+                        <button id="btnT9" label="表格编号列表-F" tag="表格编号列表-F" imageMso="Numbering" size="normal" description="应用样式 表格编号列表-F" screentip="表格编号列表-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <control idMso="TableInsertGallery" showLabel="false"/>
+                    </box>
+                    <box id="boxT5" boxStyle="horizontal">
+                        <button id="btnT10" label="表格项目符号列表-F" tag="表格项目符号列表-F" imageMso="BulletsAndNumberingBulletsDialog" size="normal" description="应用样式 表格项目符号列表-F" screentip="表格项目符号列表-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <control idMso="TableBordersMenu" showLabel="false"/>
+                    </box>
+                    <box id="boxT6" boxStyle="horizontal">
+                        <toggleButton idMso="TableRepeatHeaderRows" showLabel="false"/>
+                        <control idMso="TableSplitTable" showLabel="false"/>
+						<button id="btnT11" label="表标题-F" tag="表标题-F" image="TableTitle" size="normal" description="应用样式 表标题-F" screentip="表标题-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                </group>
+
+                <!-- == 图片 == -->
+                <group id="grpFigure" label="图片">
+                    <box id="boxF1" boxStyle="horizontal">
+                        <button id="btnF1" label="图片-F" tag="图片-F" imageMso="ContentControlPicture" size="normal" description="应用样式 图片-F" screentip="图片-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxF2" boxStyle="horizontal">
+                        <toggleButton idMso="TextWrappingInLineWithText" showLabel="false"/>
+                    </box>
+					<box id="boxF3" boxStyle="horizontal">
+                        <button id="btnF2" label="图标题-F" tag="图标题-F" image="FigureTitle" size="normal" description="应用样式 图标题-F" screentip="图标题-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                </group>
+
+                <!-- == 列表相关 == -->
+                <group id="grpList" label="列表">
+                    <box id="boxL1" boxStyle="horizontal">
+                        <button id="btnNum" label="编号列表-F" tag="编号列表-F" imageMso="Numbering" size="normal" description="应用样式 编号列表-F" screentip="编号列表-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnBul" label="项目符号列表-F" tag="项目符号列表-F" imageMso="BulletsAndNumberingBulletsDialog" size="normal" description="应用样式 项目符号列表-F" screentip="项目符号列表-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxL2" boxStyle="horizontal">
+                        <button id="btnRefList" label="参考文献列表-F" tag="参考文献列表-F" image="RefList" size="normal" description="应用样式 参考文献列表-F" screentip="参考文献列表-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <control idMso="NumberingRestart" showLabel="false"/>
+                    </box>
+                    <box id="boxL3" boxStyle="horizontal">
+                        <control idMso="IndentIncreaseWord"/>
+                        <control idMso="IndentDecreaseWord"/>
+                    </box>
+                </group>
+
+                <!-- == 引用工具 == -->
+                <group id="grpReference" label="引用">
+                    <box id="boxR1" boxStyle="horizontal">
+                        <control idMso="TableOfContentsDialog" showLabel="false"/>
+                        <control idMso="TableOfContentsUpdate" imageMso="Refresh" showLabel="false"/>
+                        <control idMso="TableOfFiguresInsert" showLabel="false"/>
+                        <control idMso="TableOfFiguresUpdate" imageMso="SourceControlRefreshStatus" showLabel="false"/>
+                    </box>
+                    <box id="boxR2" boxStyle="horizontal">
+                        <control idMso="CaptionInsert" showLabel="false"/> 
+                        <control idMso="CrossReferenceInsert" showLabel="false"/>
+                        <control idMso="HyperlinkInsert" showLabel="false"/>
+                    </box>
+                    <box id="boxR3" boxStyle="horizontal">
+                        <control idMso="BookmarkInsert" showLabel="false"/>
+                        <control idMso="FootnoteInsert" showLabel="false"/>
+                        <control idMso="EndnoteInsertWord" showLabel="false"/>
+                        <control idMso="FieldsUpdate" showLabel="false" screentip="更新域"/>
+                    </box>
+                </group>
+
+                <!-- == 布局 == -->
+                <group id="grpLayout" label="布局">
+                    <box id="boxLayout1" boxStyle="horizontal">
+                        <control idMso="PageBreakInsertWord" showLabel="false"/>
+                        <button id="btnHeaderStyle" label="页眉-F" tag="页眉-F" imageMso="HeaderFooterHeaderGallery" size="normal" description="应用样式 页眉-F" screentip="页眉-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxLayout2" boxStyle="horizontal">
+                        <control idMso="SectionBreakInsert" imageMso="FillMenu" showLabel="false"/>
+                        <button id="btnFooterStyle" label="页脚-F" tag="页脚-F" imageMso="HeaderFooterFooterGallery" size="normal" description="应用样式 页脚-F" screentip="页脚-F" showLabel="false" onAction="btnStyle_Click"/>
+                    </box>
+                    <box id="boxLayout3" boxStyle="horizontal">
+                        <control idMso="PageSetupDialog" showLabel="false"/>
+                        <control idMso="InsertAlignmentTab" showLabel="false"/>
+                    </box>
+                </group>
+				
+                <!-- == 审阅 == -->
+				<group id="grpMyReview" label="审阅及修订">
+					<box id="boxReview1" boxStyle="horizontal">
+						<button idMso="ReviewNewComment" showLabel="false"/>
+					</box>
+					<box id="boxReview2" boxStyle="horizontal">
+						<toggleButton idMso="ReviewTrackChanges" showLabel="false"/>
+					</box>
+				</group>
+
+                <!-- == 常用宏 == -->
+				<group id="grpMyMacro" label="常用宏">
+					<box id="boxMacro1" boxStyle="horizontal">
+						<button id="btnAddMergeFormat" label="域格式保护" imageMso="FieldCodes" size="normal" screentip="保护引用域和页码引用域格式" showLabel="false" onAction="RunAddMergeFormat"/>
+					</box>
+					<box id="boxMacro2" boxStyle="horizontal">
+						<button id="btnSetBlue" label="超链接和域设为蓝色" imageMso="FontColorPicker" size="normal" screentip="将超链接和域设置为蓝色" showLabel="false" onAction="SetHyperlinksAndFieldsToBlueRibbon"/> 
+					</box>
+				</group>
+				
+            </tab>
+        </tabs>
+    </ribbon>
+</customUI>
