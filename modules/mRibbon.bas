@@ -6,7 +6,7 @@ Private mRibbon       As IRibbonUI     '缓存 Ribbon
 Private mMainTemplate As Template      '缓存本模板（RA工具栏.dotm）
 
 '常 量
-Private Const DEF_STYLE_FILE As String = "D:\RAtools\主模板.dotx"
+Private Const DEF_STYLE_FILE As String = "D:\RAtools\master-template-cn.dotx"
 Private Const DEF_RIBBON_TMPL As String = "RA工具栏.dotm"
 
 '=====================  Ribbon 必 要 回 调  =====================

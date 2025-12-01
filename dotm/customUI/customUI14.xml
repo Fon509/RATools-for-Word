@@ -4,7 +4,7 @@
     <ribbon startFromScratch="false">
         <tabs>
             <!-- ==================== 主选项卡 ==================== -->
-            <tab id="RATool" label="RA工具箱">
+            <tab id="RATool" label="RA工具栏">
 
                 <!-- == 模板加载 == -->
                 <group id="grpLogo" label="模板">
