@@ -4,7 +4,7 @@
     <ribbon startFromScratch="false">
         <tabs>
             <!-- ==================== 主选项卡 ==================== -->
-            <tab id="RATool" label="RA工具栏">
+            <tab id="RATool" label="RATools">
 
                 <!-- == 模板加载 == -->
                 <group id="grpLogo" label="模板">
@@ -230,13 +230,8 @@
 				</group>
 
                 <!-- == 常用宏 == -->
-				<group id="grpMyMacro" label="常用宏">
-					<box id="boxMacro1" boxStyle="horizontal">
-						<button id="btnAddMergeFormat" label="域格式保护" imageMso="FieldCodes" size="normal" screentip="保护引用域和页码引用域格式" showLabel="false" onAction="RunAddMergeFormat"/>
-					</box>
-					<box id="boxMacro2" boxStyle="horizontal">
-						<button id="btnSetBlue" label="超链接和域设为蓝色" imageMso="FontColorPicker" size="normal" screentip="将超链接和域设置为蓝色" showLabel="false" onAction="SetHyperlinksAndFieldsToBlueRibbon"/> 
-					</box>
+				<group id="grpMyMacro" label="宏列表">
+					<button id="btnShowMacros" imageMso="MacroPlay" size="large" showLabel="false" onAction="ShowMacroListWindow" />
 				</group>
 				
             </tab>

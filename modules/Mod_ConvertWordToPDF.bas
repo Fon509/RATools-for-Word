@@ -1,4 +1,4 @@
-Attribute VB_Name = "BatchConvertWordToPDF"
+Attribute VB_Name = "Mod_ConvertWordToPDF"
 Sub BatchConvertWordToPDF()
     Dim targetType As Integer
     Dim folderPath As String

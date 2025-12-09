@@ -1,130 +1,108 @@
-<div align="center">
-    <img src="_image\logo.png" alt="Logo" width="400"/>
-    <p>为药品注册（RA）人开发的Word插件 - 提升资料编写效率，更好地完成注册申报</p>
-</div>
+<div align="center"> <img src="_image\logo.png" alt="Logo" width="400"/> <h3>RATools for Word - 专为药品注册（RA）打造的 Word 效率插件</h3> <p>基于实战经验开发，提升申报资料编写效率，助力注册申报工作更上一层楼。</p> </div>
 
 
-本插件采用 .dotm 文件定义功能，并通过 .dotx 文件指定样式模板。目前已在 Windows 10 及 Windows 11 系统下的 Microsoft 365 - Word 中测试通过。
 
-功能主要来自于开发者注册申报过程中的长期实践，后续也会添加更多在资料编写过程中觉得方便的功能。
+## 📖 项目简介
 
-<div align="center">
-    <img src="_image\0.png" width=100%/>
-</div>
+本插件基于 `.dotm`（启用宏的模板）定义功能核心，并通过 `.dotx` 文件管理样式模板。旨在解决药品RA人在文档编写中频繁切换选项卡、格式调整繁琐等痛点。
 
-# 配置方法
+**主要特性：**
 
-下载[release](https://github.com/Fon509/RATools/releases)中的.dotm和.dotx文件
+- **实战导向**：功能源于开发者在注册申报过程中的长期实践，精准解决痛点。
+- **兼容性**：已在 Windows 10 / 11 系统下的 Microsoft 365 Word 环境中测试通过。
+- **持续迭代**：后续将根据实际需求，持续添加更多便捷功能。
 
-在D盘中创建「RAtools」文件夹，并将下载完成的master-template-cn.dotx放在该路径下
+<div align="center"> <img src="_image\0.png" width=100%/> </div>
 
-建议在其中新建名为「Startup」的文件夹，将RAtools.dotm放入「Startup」文件夹中（也可以自行选择其他路径，后续步骤需相应调整）
+## ⚙️ 安装与配置
 
-<div align="center">
-    <img src="_image\folder.png" width=75%/>
-</div>
+为了确保插件正常运行，请严格按照以下步骤进行配置。
 
+### 1. 下载与文件准备
 
-打开Word，点击左上角「 文件」
+- 前往 [Releases](https://github.com/Fon509/RATools/releases) 下载最新的 `.dotm` 和 `.dotx` 文件。
+- **创建目录**：建议在 D 盘根目录创建文件夹，结构如下（推荐）：
+  - 将 `master-template-cn.dotx` 放入 `D:\RATools\`
+  - 将 `RAtools.dotm` 放入 `D:\RATools\Startup\`
 
-<div align="center">
-    <img src="_image\1.png" width=25%/>
-</div>
+> **注意**：您也可以自定义 `.dotx` 文件路径，但后续步骤需对应修改路径配置。本文档以推荐路径 `D:\RATools\Startup` 为例。
 
+<div align="center"> <img src="_image\folder.png" width=75%/> </div>
 
-点击「选项」
+### 2. 配置 Word 启动路径
 
-<div align="center">
-    <img src="_image\2.png" width=25%/>
-</div>
+1. 打开 Word，点击左上角 **「文件」** -> **「选项」**。
+2. 在弹出的对话框中点击 **「高级」**，向下滑动至“常规”栏目，点击 **「文件位置」**。
+3. 选中 **「启动」** 项，点击“修改”，选择存放 `RAtools.dotm` 的文件夹路径（例如：`D:\RATools\Startup`）。
 
+<div align="center"> <img src="_image\1.png" width=25%/> <img src="_image\2.png" width=25%/> </div> <div align="center"> <img src="_image\3.png" width=100%/> </div> <div align="center"> <img src="_image\4.png" width=100%/> </div>
 
-点击「高级」，右侧滚动找到「常规」，点击「文件位置」
+### 3. 添加受信任位置
 
-<div align="center">
-    <img src="_image\3.png" width=100%/>
-</div>
+为防止宏被系统安全策略拦截，需将插件目录设为受信任位置：
 
+1. 在 Word 选项对话框左侧，选择 **「信任中心」** -> **「信任中心设置」**。
+2. 选择 **「受信任位置」**，点击 **「添加新位置」**。
+3. 点击 **「浏览」**，选择插件文件夹路径（`D:\RATools\Startup`），确认无误后点击 **「确定」** 保存所有设置。
 
-选择「启动」，双击修改为放入RAtools.dotm的文件夹路径（D:\RATools\Startup）
+<div align="center"> <img src="_image\5.png" width=100%/> </div> 
+<div align="center"> <img src="_image\6.png" width=100%/> </div> 
+<div align="center"> <img src="_image\7.png" width=50%/> </div>
+<div align="center">  <img src="_image\8.png" width=100%/> </div>
 
-<div align="center">
-    <img src="_image\4.png" width=100%/>
-</div>
+## 🚀 使用指南
 
+### 加载模板
 
-在Word选项对话框左侧，选择「信任中心」，点击「信任中心设置」
+安装成功后，Word 顶部会出现 **「RA工具栏」** 选项卡。
 
-<div align="center">
-    <img src="_image\5.png" width=100%/>
-</div>
+1. 点击 **「点击加载」** 按钮即可挂载主样式模板。
+2. 成功加载后将提示 **「主模板已附加」**。
 
+> **提示**：如果未将 `master-template-cn.dotx` 放在默认路径（`D:\RATools\`），插件会提示找不到文件。此时点击“是”并手动选择文件位置即可。
 
-在信任中心对话框左侧，选择「受信任位置」，在右侧点击「添加新位置」。
-
-<div align="center">
-    <img src="_image\6.png" width=100%/>
-</div>
-
-
-点击「浏览」，选择放入RAtools.dotm的文件夹路径（D:\RATools\Startup），点击「确定」
-
-<div align="center">
-    <img src="_image\7.png" width=50%/>
-</div>
+<div align="center"> <img src="_image\9.png" width=100%/> </div> 
+<div align="center"> <img src="_image\10.png" width=25%/> </div>
+<div align="center"> <img src="_image\11.png" width=50%/> </div>
 
 
-确认无误后，点击「确定」
 
-<div align="center">
-    <img src="_image\8.png" width=100%/>
-</div>
+### 功能模块详解
 
-# 使用方法
+当前版本集成了三大核心模块：
 
-## 加载模版
+#### 1. 样式快速应用
 
-在「RA工具栏」选项卡中点击「点击加载」按钮加载主模板
+基于 `.dotx` 定义的标准样式模板，提供一键应用预设样式功能，统一文档格式标准。
 
-<div align="center">
-    <img src="_image\9.png" width=100%/>
-</div>
+#### 2. RA 常用选项
 
-点击后会提示「主模板已附加」
+将分散在 Word 不同选项卡中的高频功能（如页面设置、视图切换等）聚合至同一面板，减少鼠标点击与页面切换，显著提升操作流。
 
-<div align="center">
-    <img src="_image\10.png" width=25%/>
-</div>
+#### 3. 增强型宏工具
 
-如master-template-cn.dotx未放在D:\RATools\路径下，点击后则会提示默认位置找不到主模板，会提示手动选择。点击「是」后选择master-template-cn.dotx即可
+内置宏列表对话框，比 Word 原生界面更清晰直观。目前包含以下实用宏：
 
-<div align="center">
-    <img src="_image\11.png" width=50%/>
-</div>
+| **功能名称**            | **说明**                                                     |
+| ----------------------- | ------------------------------------------------------------ |
+| **保护引用域/页码格式** | 用于解决交叉引用刷新后已经调整蓝色字体变黑的问题。           |
+| **超链接与域蓝字化**    | 自动查找文中所有超链接和域（排除页码），将其统一设置为蓝色，符合电子申报规范。（如有 Bug 欢迎反馈） |
+| **批量转 PDF 与书签**   | 批量将 Word 文档转换为 PDF，并自动根据标题大纲生成 PDF 书签。 |
 
-## 功能介绍
-
-当前版本主要功能分为三部分
-
-1. 快捷应用预设样式：通过.dotx文件定义样式模板，点击按钮进行
-
-   具体细节暂不介绍，请自行摸索
-
-2. RA常用功能集合：来源于Word中不同选项卡下的功能按钮，将其集合到同一选项卡中，避免来回切换选项卡，提高效率
-
-3. 通过宏实现更多功能扩展（宏后续会调整为通过统一对话框调用，目前比较散乱）
-
-   目前内置以下3个宏
-
-   1. 保护引用域和页码引用域格式：主要用于交叉引用刷新后设置的蓝字字体颜色还原为黑色
-   2. 将超链接和域设置为蓝色：点击后将会自动找到所有超链接和域（交叉引用等）设置为蓝色，排除了页码（有bug请反馈）
-   3. 批量将Word转为PDF，并通过标题创建目录
-
-## 进阶用法
+## ⬆️进阶用法
 
 ### 修改.dotx文件实现样式自定义，满足自己独特的样式偏好
 
 
 
-### 创建属于自己的宏
+### 创建属于自己的宏并添加至宏列表中
 
+
+
+## 📝 交流与反馈
+
+如果您在使用过程中遇到问题或有新的功能建议，欢迎提交 Issue 或联系开发者。
+
+## 📅 更新日志
+
+查看版本更新历史，请参阅 [CHANGELOG](https://github.com/Fon509/RATools-for-Word/blob/main/CHANGELOG.md)。

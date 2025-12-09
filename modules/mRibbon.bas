@@ -3,11 +3,11 @@ Option Explicit
 
 '=====================  模 块 级 变 量  =====================
 Private mRibbon       As IRibbonUI     '缓存 Ribbon
-Private mMainTemplate As Template      '缓存本模板（RA工具栏.dotm）
+Private mMainTemplate As Template      '缓存本模板（RAtools.dotm）
 
 '常 量
 Private Const DEF_STYLE_FILE As String = "D:\RAtools\master-template-cn.dotx"
-Private Const DEF_RIBBON_TMPL As String = "RA工具栏.dotm"
+Private Const DEF_RIBBON_TMPL As String = "RAtools.dotm"
 
 '=====================  Ribbon 必 要 回 调  =====================
 'Ribbon OnLoad
@@ -59,7 +59,7 @@ Public Sub btnCap_Click(ByVal control As IRibbonControl)
 End Sub
 
 '=====================  私 有 过 程  =====================
-'确保 mMainTemplate 已指向 F工具栏.dotm
+'确保 mMainTemplate 已指向 RATools.dotm
 Private Function EnsureMainTemplate() As Boolean
     If mMainTemplate Is Nothing Then
         Dim t As Template
@@ -76,29 +76,6 @@ Private Function EnsureMainTemplate() As Boolean
 End Function
 
 
-'应用样式 + 补 MERGEFORMAT
-Private Sub ApplyStyle(ByVal styleName As String)
-    Selection.Style = ActiveDocument.Styles(styleName)
-    AddMergeFormat
-End Sub
-
-'为选区内 REF/PAGEREF 加 \* MERGEFORMAT,保护域格式
-Private Sub AddMergeFormat()
-    Dim fld As field, rng As Range
-    For Each fld In Selection.Fields
-        If fld.Type = wdFieldRef Or fld.Type = wdFieldPageRef Then
-            Set rng = fld.Code
-            If InStr(1, rng.Text, "mergeformat", vbTextCompare) = 0 Then
-                rng.Text = rng.Text & " \* MERGEFORMAT "
-                fld.Update
-            End If
-        End If
-    Next fld
-End Sub
-
-Sub RunAddMergeFormat(control As IRibbonControl)
-    AddMergeFormat
-End Sub
 
 '样式错误统一提示
 Private Sub HandleStyleErr()
@@ -126,7 +103,7 @@ Private Function GetStyleFilePath() As String
     End With
 End Function
 
-'================  下拉选择对齐方式  ================
+'================  对齐方式  ================
 '================  下拉菜单：左对齐  ================
 Public Sub AlignLeft_Click(control As IRibbonControl)
     Selection.ParagraphFormat.Alignment = wdAlignParagraphLeft
@@ -147,94 +124,7 @@ Public Sub AlignJustify_Click(control As IRibbonControl)
     Selection.ParagraphFormat.Alignment = wdAlignParagraphJustify
 End Sub
 
-'=== 智能设置超链接和域为蓝色（避免不必要的格式更改）===
-Sub SetHyperlinksAndFieldsToBlue()
-    Dim hyperlink As hyperlink
-    Dim field As field
-    Dim storyRange As Range
-    Dim countChanged As Integer
-    
-    Application.ScreenUpdating = False
-    countChanged = 0
-    
-    ' 处理超链接
-    For Each hyperlink In ActiveDocument.Hyperlinks
-        If hyperlink.Range.Font.Color <> RGB(0, 0, 255) Then
-            hyperlink.Range.Font.Color = RGB(0, 0, 255)
-            countChanged = countChanged + 1
-        End If
-    Next hyperlink
-    
-    ' 处理域，但排除题注
-    For Each storyRange In ActiveDocument.StoryRanges
-        countChanged = countChanged + ProcessFieldsExcludeCaptions(storyRange)
-    Next storyRange
-    
-    Application.ScreenUpdating = True
-    
-    If countChanged > 0 Then
-        MsgBox "已将 " & countChanged & " 个超链接和域设置为蓝色", vbInformation
-    Else
-        MsgBox "所有超链接和域已经是蓝色", vbInformation
-    End If
-End Sub
 
-Private Function ProcessFieldsExcludeCaptions(rng As Range) As Integer
-    Dim field As field
-    Dim count As Integer
-    Dim fieldCode As String
-    
-    count = 0
-    For Each field In rng.Fields
-        ' 获取域代码并检查是否是题注
-        fieldCode = LCase(field.Code.Text)
-        
-        ' 排除题注相关的域（SEQ域和包含"图"、"表"等题注关键词的域）
-        If Not IsCaptionField(fieldCode) Then
-            If field.Result.Font.Color <> RGB(0, 0, 255) Then
-                field.Result.Font.Color = RGB(0, 0, 255)
-                count = count + 1
-            End If
-        End If
-    Next field
-    
-    ' 处理链接的范围
-    Do While Not (rng.NextStoryRange Is Nothing)
-        Set rng = rng.NextStoryRange
-        For Each field In rng.Fields
-            fieldCode = LCase(field.Code.Text)
-            If Not IsCaptionField(fieldCode) Then
-                If field.Result.Font.Color <> RGB(0, 0, 255) Then
-                    field.Result.Font.Color = RGB(0, 0, 255)
-                    count = count + 1
-                End If
-            End If
-        Next field
-    Loop
-    
-    ProcessFieldsExcludeCaptions = count
-End Function
-
-' 判断是否为题注域的函数
-Private Function IsCaptionField(fieldCode As String) As Boolean
-    ' 常见的题注域标识
-    Dim captionIndicators As Variant
-    captionIndicators = Array("seq", "图", "表", "chart", "figure", "table", "caption")
-    
-    Dim indicator As Variant
-    For Each indicator In captionIndicators
-        If InStr(1, fieldCode, indicator, vbTextCompare) > 0 Then
-            IsCaptionField = True
-            Exit Function
-        End If
-    Next indicator
-    
-    IsCaptionField = False
-End Function
-
-Public Sub SetHyperlinksAndFieldsToBlueRibbon(control As IRibbonControl)
-    SetHyperlinksAndFieldsToBlue
-End Sub
 
 ' 显示/隐藏样式管理窗格
 Public Sub ShowStylePane(control As IRibbonControl)
@@ -248,4 +138,68 @@ Public Sub ShowStylePane(control As IRibbonControl)
 ErrorHandler:
     ' 如果内置命令失败，使用快捷键
     SendKeys "%^{+}s", True
+End Sub
+
+'=====================  宏 列 表 管 理  =====================
+
+' 1. Ribbon 回调：点击按钮弹出窗体
+' 在 Ribbon XML 中，将按钮的 onAction 指向这个 Sub
+Public Sub ShowMacroListWindow(control As IRibbonControl)
+    frmMacroList.Show
+End Sub
+
+
+' 2. 供窗体调用的数据源函数
+' 返回值：Variant 数组
+Public Function GetMyMacroRegistry() As Variant
+    Dim items As New Collection
+    Dim vArr() As Variant
+    Dim i As Long
+    
+    ' ================= 配置区域：Array(英文代码, 简短名称, 详细描述) =================
+    
+    ' 格式：items.Add Array("宏代码名", "列表显示的名称", "下方显示的详细介绍")
+    
+    ' 第1个
+    items.Add Array("SetHyperlinksAndFieldsToBlue", _
+                    "超链接一键蓝字", _
+                    "智能遍历文档，将所有超链接和域（REF/PAGEREF等）的颜色设置为蓝色，但在处理过程中会自动排除图表题注。")
+      
+    ' 第2个
+    items.Add Array("Wrapper_RunAddMergeFormat", _
+                    "域格式保护", _
+                    "扫描选区内的引用域，自动添加 \* MERGEFORMAT 开关，防止更新域后格式丢失。")
+                    
+    ' 第3个
+    items.Add Array("BatchConvertWordToPDF", _
+                    "Word批量转PDF", _
+                    "批量将Word转为PDF，并通过Word标题创建PDF书签")
+
+                    
+    ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
+    ' 如果需要 control 参数的宏，需要下面做一个 Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加
+    
+    ' ================= 配置结束 =================
+    
+    If items.count > 0 Then
+        ReDim vArr(0 To items.count - 1)
+        For i = 1 To items.count
+            vArr(i - 1) = items(i)
+        Next i
+        GetMyMacroRegistry = vArr
+    Else
+        GetMyMacroRegistry = Empty
+    End If
+End Function
+
+'=====================  Wrapper 包装器  =====================
+' 解释：因为很多宏是 Ribbon 回调 (带 control 参数)，
+' Application.Run 无法自动提供 control 参数，直接运行会报错。
+' 所以我们需要一些不带参数的“外壳”过程。
+
+Public Sub Wrapper_RunAddMergeFormat()
+    ' 调用原有的逻辑
+    ' 注意：因为原 Sub 需要 control 参数，我们传 Nothing 进去
+    ' 只要原 Sub 内部没用到 control.ID 或 control.Tag，这样写就是安全的
+    RunAddMergeFormat Nothing
 End Sub
