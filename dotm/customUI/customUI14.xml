@@ -206,12 +206,12 @@
                 <!-- == 布局 == -->
                 <group id="grpLayout" label="布局">
                     <box id="boxLayout1" boxStyle="horizontal">
-                        <control idMso="PageBreakInsertWord" showLabel="false"/>
                         <button id="btnHeaderStyle" label="页眉-F" tag="页眉-F" imageMso="HeaderFooterHeaderGallery" size="normal" description="应用样式 页眉-F" screentip="页眉-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <button id="btnFooterStyle" label="页脚-F" tag="页脚-F" imageMso="HeaderFooterFooterGallery" size="normal" description="应用样式 页脚-F" screentip="页脚-F" showLabel="false" onAction="btnStyle_Click"/>
                     </box>
                     <box id="boxLayout2" boxStyle="horizontal">
-                        <control idMso="SectionBreakInsert" imageMso="FillMenu" showLabel="false"/>
-                        <button id="btnFooterStyle" label="页脚-F" tag="页脚-F" imageMso="HeaderFooterFooterGallery" size="normal" description="应用样式 页脚-F" screentip="页脚-F" showLabel="false" onAction="btnStyle_Click"/>
+                        <control idMso="PageBreakInsertWord" showLabel="false"/>
+                        <control idMso="SectionBreakInsert" imageMso="FillMenu" showLabel="false"/>                        
                     </box>
                     <box id="boxLayout3" boxStyle="horizontal">
                         <control idMso="PageSetupDialog" showLabel="false"/>
