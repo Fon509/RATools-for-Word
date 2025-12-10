@@ -6,8 +6,12 @@ Private mRibbon       As IRibbonUI     '缓存 Ribbon
 Private mMainTemplate As Template      '缓存本模板（RAtools.dotm）
 
 '常 量
+'注意：请根据需要修改这里的默认路径
 Private Const DEF_STYLE_FILE As String = "D:\RAtools\master-template-cn.dotx"
 Private Const DEF_RIBBON_TMPL As String = "RAtools.dotm"
+
+'新增：定义要匹配的后缀，对应 ImportStyles 中的 TARGET_SUFFIX
+Private Const TARGET_SUFFIX As String = "-F"
 
 '=====================  Ribbon 必 要 回 调  =====================
 'Ribbon OnLoad
@@ -15,21 +19,61 @@ Public Sub Onload(ribbon As IRibbonUI)
     Set mRibbon = ribbon
 End Sub
 
-'=====================  附 加 主 模 板  =====================
+'=====================  导 入 指 定 样 式  =====================
 Public Sub AttachTemplate(ByVal control As IRibbonControl)
     Dim tmplPath As String
+    Dim sourceDoc As Document
+    Dim currentDoc As Document
+    Dim sty As Style
+    Dim importCount As Integer
+    
+    ' 1. 获取路径
     tmplPath = GetStyleFilePath
     If tmplPath = "" Then Exit Sub
     
-    On Error GoTo ErrH
-    With ActiveDocument
-        .UpdateStylesOnOpen = True
-        .AttachedTemplate = tmplPath
-    End With
-    MsgBox "主模板已附加！", vbInformation
-    Exit Sub
-ErrH:
-    MsgBox "模板附加失败！", vbCritical
+    Set currentDoc = ActiveDocument
+    importCount = 0
+    
+    ' 2. 后台打开模版并遍历样式
+    Application.ScreenUpdating = False
+    
+    ' 以只读、不可见的方式打开模版文件
+    ' [cite: 4, 5]
+    Set sourceDoc = Documents.Open(fileName:=tmplPath, ReadOnly:=True, Visible:=False)
+    
+    On Error Resume Next ' 防止个别样式无法复制导致中断
+    
+    ' 遍历模版中的每一个样式
+    For Each sty In sourceDoc.Styles
+        ' 检查样式名是否以指定的后缀结尾 (忽略大小写)
+        '
+        If UCase(Right(sty.NameLocal, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX) Then
+            
+            ' 执行复制操作
+            Application.OrganizerCopy _
+                Source:=sourceDoc.FullName, _
+                Destination:=currentDoc.FullName, _
+                Name:=sty.NameLocal, _
+                Object:=wdOrganizerObjectStyles
+            
+            ' 计数 [cite: 7]
+            If Err.Number = 0 Then
+                importCount = importCount + 1
+            Else
+                Err.Clear
+            End If
+        End If
+    Next sty
+    
+    ' 3. 清理工作 [cite: 7, 8]
+    sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
+    Set sourceDoc = Nothing
+    
+    Application.ScreenUpdating = True
+    
+    ' 4. 反馈结果
+    MsgBox "操作完成！" & vbCrLf & "共导入了 " & importCount & " 个后缀为 '" & TARGET_SUFFIX & "' 的样式。", vbInformation, "导入成功"
+
 End Sub
 
 '=====================  段 落 样 式  =====================
@@ -75,7 +119,30 @@ Private Function EnsureMainTemplate() As Boolean
         MsgBox "请先加载 " & DEF_RIBBON_TMPL, vbCritical
 End Function
 
+'=====================  保护引用域/页码格式  =====================
+'应用样式 + 补 MERGEFORMAT
+Private Sub ApplyStyle(ByVal styleName As String)
+    Selection.Style = ActiveDocument.Styles(styleName)
+    AddMergeFormat
+End Sub
 
+'为选区内 REF/PAGEREF 加 \* MERGEFORMAT,保护域格式
+Private Sub AddMergeFormat()
+    Dim fld As field, rng As Range
+    For Each fld In Selection.Fields
+        If fld.Type = wdFieldRef Or fld.Type = wdFieldPageRef Then
+            Set rng = fld.Code
+            If InStr(1, rng.Text, "mergeformat", vbTextCompare) = 0 Then
+                rng.Text = rng.Text & " \* MERGEFORMAT "
+                fld.Update
+            End If
+        End If
+    Next fld
+End Sub
+
+Sub RunAddMergeFormat(control As IRibbonControl)
+    AddMergeFormat
+End Sub
 
 '样式错误统一提示
 Private Sub HandleStyleErr()
@@ -103,7 +170,7 @@ Private Function GetStyleFilePath() As String
     End With
 End Function
 
-'================  对齐方式  ================
+'================  下拉选择对齐方式  ================
 '================  下拉菜单：左对齐  ================
 Public Sub AlignLeft_Click(control As IRibbonControl)
     Selection.ParagraphFormat.Alignment = wdAlignParagraphLeft
@@ -123,7 +190,6 @@ End Sub
 Public Sub AlignJustify_Click(control As IRibbonControl)
     Selection.ParagraphFormat.Alignment = wdAlignParagraphJustify
 End Sub
-
 
 
 ' 显示/隐藏样式管理窗格
@@ -174,6 +240,14 @@ Public Function GetMyMacroRegistry() As Variant
     items.Add Array("BatchConvertWordToPDF", _
                     "Word批量转PDF", _
                     "批量将Word转为PDF，并通过Word标题创建PDF书签")
+    ' 第4个
+    items.Add Array("BatchRenameFiles", _
+                    "一键修改文件名", _
+                    "批量修改文件名" & vbCrLf & _
+                    "1. 仅保留汉字、字母、数字、中划线和下划线" & vbCrLf & _
+                    "2. 空格将被直接删除，其他非法字符替换为中划线 ""-""" & vbCrLf & _
+                    "3. 支持“文件夹模式”和“多文件选择模式”" & vbCrLf & _
+                    "4. 如果文件被占用无法重命名，自动创建改名后的副本")
 
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
