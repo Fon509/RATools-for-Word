@@ -1,4 +1,4 @@
-<div align="center"> <img src="_image\logo.png" alt="Logo" width="400"/> <h3>RATools for Word - 专为药品注册（RA）打造的 Word 效率插件</h3> <p>基于实战经验开发，提升申报资料编写效率，助力注册申报工作更上一层楼。</p> </div>
+<div align="center"> <img src="_image/logo.png" alt="Logo" width="400"/> <h3>RATools for Word - 专为药品注册（RA）打造的 Word 效率插件</h3> <p>基于实战经验开发，提升申报资料编写效率，助力注册申报工作更上一层楼。</p> </div>
 
 
 
@@ -12,7 +12,7 @@
 - **兼容性**：已在 Windows 10 / 11 系统下的 Microsoft 365 Word 环境中测试通过。
 - **持续迭代**：后续将根据实际需求，持续添加更多便捷功能。
 
-<div align="center"> <img src="_image\0.png" width=100%/> </div>
+<div align="center"> <img src="_image/0.png" width=100%/> </div>
 
 ## ⚙️ 安装与配置
 
@@ -27,7 +27,7 @@
 
 > **注意**：您也可以自定义 `.dotx` 文件路径，但后续步骤需对应修改路径配置。本文档以推荐路径 `D:\RATools\Startup` 为例。
 
-<div align="center"> <img src="_image\folder.png" width=75%/> </div>
+<div align="center"> <img src="_image/folder.png" width=75%/> </div>
 
 ### 2. 配置 Word 启动路径
 
@@ -35,7 +35,7 @@
 2. 在弹出的对话框中点击 **「高级」**，向下滑动至“常规”栏目，点击 **「文件位置」**。
 3. 选中 **「启动」** 项，点击“修改”，选择存放 `RAtools.dotm` 的文件夹路径（例如：`D:\RATools\Startup`）。
 
-<div align="center"> <img src="_image\1.png" width=25%/> <img src="_image\2.png" width=25%/> </div> <div align="center"> <img src="_image\3.png" width=100%/> </div> <div align="center"> <img src="_image\4.png" width=100%/> </div>
+<div align="center"> <img src="_image/1.png" width=25%/> <img src="_image/2.png" width=25%/> </div> <div align="center"> <img src="_image/3.png" width=100%/> </div> <div align="center"> <img src="_image/4.png" width=100%/> </div>
 
 ### 3. 添加受信任位置
 
@@ -45,10 +45,10 @@
 2. 选择 **「受信任位置」**，点击 **「添加新位置」**。
 3. 点击 **「浏览」**，选择插件文件夹路径（`D:\RATools\Startup`），确认无误后点击 **「确定」** 保存所有设置。
 
-<div align="center"> <img src="_image\5.png" width=100%/> </div> 
-<div align="center"> <img src="_image\6.png" width=100%/> </div> 
-<div align="center"> <img src="_image\7.png" width=50%/> </div>
-<div align="center">  <img src="_image\8.png" width=100%/> </div>
+<div align="center"> <img src="_image/5.png" width=100%/> </div> 
+<div align="center"> <img src="_image/6.png" width=100%/> </div> 
+<div align="center"> <img src="_image/7.png" width=50%/> </div>
+<div align="center">  <img src="_image/8.png" width=100%/> </div>
 
 ## 🚀 使用指南
 
@@ -61,9 +61,9 @@
 
 > **提示**：如果未将 `master-template-cn.dotx` 放在默认路径（`D:\RATools\`），插件会提示找不到文件。此时点击“是”并手动选择文件位置即可。
 
-<div align="center"> <img src="_image\9.png" width=100%/> </div> 
-<div align="center"> <img src="_image\10.png" width=40%/> </div>
-<div align="center"> <img src="_image\11.png" width=40%/> </div>
+<div align="center"> <img src="_image/9.png" width=100%/> </div> 
+<div align="center"> <img src="_image/10.png" width=40%/> </div>
+<div align="center"> <img src="_image/11.png" width=40%/> </div>
 
 
 
