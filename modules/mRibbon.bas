@@ -5,12 +5,12 @@ Option Explicit
 Private mRibbon       As IRibbonUI     '缓存 Ribbon
 Private mMainTemplate As Template      '缓存本模板（RAtools.dotm）
 
-'常 量
-'注意：请根据需要修改这里的默认路径
+'=====================  配 置 区 域  =====================
+' 请根据您的实际环境修改此路径
 Private Const DEF_STYLE_FILE As String = "D:\RAtools\master-template-cn.dotx"
 Private Const DEF_RIBBON_TMPL As String = "RAtools.dotm"
 
-'新增：定义要匹配的后缀，对应 ImportStyles 中的 TARGET_SUFFIX
+' 定义要匹配的自定义后缀
 Private Const TARGET_SUFFIX As String = "-F"
 
 '=====================  Ribbon 必 要 回 调  =====================
@@ -19,61 +19,81 @@ Public Sub Onload(ribbon As IRibbonUI)
     Set mRibbon = ribbon
 End Sub
 
-'=====================  导 入 指 定 样 式  =====================
+'=====================  导 入 样 式 (核 心 逻 辑)  =====================
+' 说明：已升级为“双重导入”策略，支持 -F 后缀及目录样式
 Public Sub AttachTemplate(ByVal control As IRibbonControl)
     Dim tmplPath As String
     Dim sourceDoc As Document
     Dim currentDoc As Document
     Dim sty As Style
+    Dim stylesList As New Collection ' 使用集合暂存样式名
+    Dim vStyleName As Variant
     Dim importCount As Integer
+    Dim pass As Integer
+    Dim sName As String
     
-    ' 1. 获取路径
+    ' 1. 获取路径 (复用 mRibbon 原有的路径获取函数)
     tmplPath = GetStyleFilePath
     If tmplPath = "" Then Exit Sub
     
     Set currentDoc = ActiveDocument
-    importCount = 0
     
-    ' 2. 后台打开模版并遍历样式
-    Application.ScreenUpdating = False
+    Application.ScreenUpdating = False ' 关闭屏幕刷新
     
+    ' 2. 后台打开模版并筛选样式
     ' 以只读、不可见的方式打开模版文件
-    ' [cite: 4, 5]
     Set sourceDoc = Documents.Open(fileName:=tmplPath, ReadOnly:=True, Visible:=False)
     
-    On Error Resume Next ' 防止个别样式无法复制导致中断
+    On Error Resume Next
     
-    ' 遍历模版中的每一个样式
+    ' 遍历模版中的样式，建立“待导入名单”
     For Each sty In sourceDoc.Styles
-        ' 检查样式名是否以指定的后缀结尾 (忽略大小写)
-        '
-        If UCase(Right(sty.NameLocal, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX) Then
+        sName = sty.NameLocal
+        
+        ' 判断逻辑：
+        ' 1. 名字以 "-F" 结尾
+        ' 2. 或者 名字以 "TOC" 开头 (兼容 TOC 1, TOC 2...)
+        ' 3. 或者 名字包含 "图表目录"或 "Table of Figures"
+        If (UCase(Right(sName, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX)) Or _
+           (UCase(Left(sName, 3)) = "TOC") Or _
+           (InStr(sName, "图表目录") > 0) Or _
+           (InStr(sName, "Table of Figures") > 0) Then
             
-            ' 执行复制操作
-            Application.OrganizerCopy _
-                Source:=sourceDoc.FullName, _
-                Destination:=currentDoc.FullName, _
-                Name:=sty.NameLocal, _
-                Object:=wdOrganizerObjectStyles
-            
-            ' 计数 [cite: 7]
-            If Err.Number = 0 Then
-                importCount = importCount + 1
-            Else
-                Err.Clear
-            End If
+            ' 将符合条件的样式名加入集合
+            stylesList.Add sName
         End If
     Next sty
     
-    ' 3. 清理工作 [cite: 7, 8]
+    ' 如果没有找到任何样式，直接退出
+    If stylesList.count = 0 Then
+        sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
+        Application.ScreenUpdating = True
+        MsgBox "模版中没有找到符合条件（-F 或 TOC）的样式。", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 3. 执行“双重导入”策略
+    ' 第一遍：创建样式实体（此时基于 BaseOn 的链接可能会断裂）
+    ' 第二遍：覆盖样式定义（修复链接关系）
+    For pass = 1 To 2
+        For Each vStyleName In stylesList
+            Application.OrganizerCopy _
+                Source:=sourceDoc.FullName, _
+                Destination:=currentDoc.FullName, _
+                Name:=vStyleName, _
+                Object:=wdOrganizerObjectStyles
+        Next vStyleName
+    Next pass
+    
+    ' 4. 清理工作
     sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
     Set sourceDoc = Nothing
     
     Application.ScreenUpdating = True
     
-    ' 4. 反馈结果
-    MsgBox "操作完成！" & vbCrLf & "共导入了 " & importCount & " 个后缀为 '" & TARGET_SUFFIX & "' 的样式。", vbInformation, "导入成功"
-
+    ' 5. 反馈结果
+    MsgBox "操作完成！" & vbCrLf & _
+           "已成功导入 " & stylesList.count & " 个样式。", vbInformation, "导入成功"
 End Sub
 
 '=====================  段 落 样 式  =====================
@@ -239,7 +259,8 @@ Public Function GetMyMacroRegistry() As Variant
     ' 第3个
     items.Add Array("BatchConvertWordToPDF", _
                     "Word批量转PDF", _
-                    "批量将Word转为PDF，并通过Word标题创建PDF书签")
+                    "批量将Word转为PDF，并通过Word标题创建PDF书签。")
+    
     ' 第4个
     items.Add Array("BatchRenameFiles", _
                     "一键修改文件名", _
@@ -248,6 +269,11 @@ Public Function GetMyMacroRegistry() As Variant
                     "2. 空格将被直接删除，其他非法字符替换为中划线 ""-""" & vbCrLf & _
                     "3. 支持“文件夹模式”和“多文件选择模式”" & vbCrLf & _
                     "4. 如果文件被占用无法重命名，自动创建改名后的副本")
+    
+    ' 第5个
+    items.Add Array("ConvertHeadingNumbers", _
+                    "标题编号转文本", _
+                    "将文档中所有标题（大纲 1-9 级）的自动编号转换为固定的静态文本。")
 
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
