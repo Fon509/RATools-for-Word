@@ -1,5 +1,5 @@
 Attribute VB_Name = "Mod_HyperlinksToBlue"
-'=== 智能设置超链接和域为蓝色（避免不必要的格式更改）===
+'=== 智能设置超链接和域为蓝色===
 Sub SetHyperlinksAndFieldsToBlue()
     Dim hyperlink As hyperlink
     Dim field As field
@@ -9,7 +9,7 @@ Sub SetHyperlinksAndFieldsToBlue()
     Application.ScreenUpdating = False
     countChanged = 0
     
-    ' 处理超链接
+    ' 1. 处理超链接
     For Each hyperlink In ActiveDocument.Hyperlinks
         If hyperlink.Range.Font.Color <> RGB(0, 0, 255) Then
             hyperlink.Range.Font.Color = RGB(0, 0, 255)
@@ -17,7 +17,7 @@ Sub SetHyperlinksAndFieldsToBlue()
         End If
     Next hyperlink
     
-    ' 处理域，但排除题注
+    ' 2. 处理域，但排除题注和页码
     For Each storyRange In ActiveDocument.StoryRanges
         countChanged = countChanged + ProcessFieldsExcludeCaptions(storyRange)
     Next storyRange
@@ -37,25 +37,22 @@ Private Function ProcessFieldsExcludeCaptions(rng As Range) As Integer
     Dim fieldCode As String
     
     count = 0
+    
+    ' 处理主范围
     For Each field In rng.Fields
-        ' 获取域代码并检查是否是题注
-        fieldCode = LCase(field.Code.Text)
-        
-        ' 排除题注相关的域（SEQ域和包含"图"、"表"等题注关键词的域）
-        If Not IsCaptionField(fieldCode) Then
-            If field.Result.Font.Color <> RGB(0, 0, 255) Then
+        If IsProcessableField(field) Then
+             If field.Result.Font.Color <> RGB(0, 0, 255) Then
                 field.Result.Font.Color = RGB(0, 0, 255)
                 count = count + 1
             End If
         End If
     Next field
     
-    ' 处理链接的范围
+    ' 处理链接的范围（如页眉页脚）
     Do While Not (rng.NextStoryRange Is Nothing)
         Set rng = rng.NextStoryRange
         For Each field In rng.Fields
-            fieldCode = LCase(field.Code.Text)
-            If Not IsCaptionField(fieldCode) Then
+            If IsProcessableField(field) Then
                 If field.Result.Font.Color <> RGB(0, 0, 255) Then
                     field.Result.Font.Color = RGB(0, 0, 255)
                     count = count + 1
@@ -67,9 +64,29 @@ Private Function ProcessFieldsExcludeCaptions(rng As Range) As Integer
     ProcessFieldsExcludeCaptions = count
 End Function
 
+' 辅助函数：判断是否为需要处理的域（排除页码和题注）
+Private Function IsProcessableField(fld As field) As Boolean
+    ' 1. 排除页码相关域类型
+    If fld.Type = wdFieldPage Or fld.Type = wdFieldNumPages Or fld.Type = wdFieldSectionPages Then
+        IsProcessableField = False
+        Exit Function
+    End If
+    
+    ' 2. 排除题注（基于域代码文本）
+    Dim fieldCode As String
+    fieldCode = LCase(fld.Code.Text)
+    
+    If IsCaptionField(fieldCode) Then
+        IsProcessableField = False
+        Exit Function
+    End If
+    
+    ' 通过检查
+    IsProcessableField = True
+End Function
+
 ' 判断是否为题注域的函数
 Private Function IsCaptionField(fieldCode As String) As Boolean
-    ' 常见的题注域标识
     Dim captionIndicators As Variant
     captionIndicators = Array("seq", "图", "表", "chart", "figure", "table", "caption")
     

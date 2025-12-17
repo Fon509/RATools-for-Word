@@ -2,8 +2,8 @@ Attribute VB_Name = "Mod_BatchRenameFiles"
 Sub BatchRenameFiles()
     ' ==============================================================================
     ' 功能：批量清洗文件名
-    '       1. 仅保留汉字、字母、数字、中划线和下划线
-    '       2. 空格将被直接删除，其他非法字符替换为中划线 "-"
+    '       1. 仅保留汉字、小写字母、数字、中划线和下划线
+    '       2. 空格将被直接删除，大写字母会替换为小写字母，其他非法字符替换为中划线 "-"
     '       3. 支持“文件夹模式”和“多文件选择模式”
     '       4. 如果文件被占用无法重命名，自动创建改名后的副本
     ' ==============================================================================
@@ -97,14 +97,20 @@ Sub BatchRenameFiles()
         targetFolder = fso.GetParentFolderName(fullPath) & "\"
         fileName = fso.GetFileName(fullPath)
         baseName = fso.GetBaseName(fullPath)
-        extName = "." & fso.GetExtensionName(fullPath)
+        
+        ' 【修改点1】获取扩展名时强制转换为小写 (避免 .PDF 这种情况)
+        extName = "." & LCase(fso.GetExtensionName(fullPath))
         If extName = "." Then extName = ""
         
         ' 清洗逻辑：先去空格，再替特殊字符
         baseName = Replace(baseName, " ", "")
+        
+        ' 【修改点2】将文件名主体强制转换为小写
+        baseName = LCase(baseName)
+        
         cleanName = regEx.Replace(baseName, "-")
         
-        If Len(cleanName) = 0 Then cleanName = "RenamedFile"
+        If Len(cleanName) = 0 Then cleanName = "renamedfile" ' 默认名也改为小写
         
         newFileName = cleanName & extName
         
@@ -146,7 +152,7 @@ Sub BatchRenameFiles()
     MsgBox "处理完成！" & vbCrLf & _
            "直接重命名: " & count & " 个" & vbCrLf & _
            "创建副本(原文件被占用): " & copyCount & " 个", _
-           vbInformation, "文件名清洗助手"
+           vbInformation, "文件名批量修改"
     
     Set regEx = Nothing
     Set fso = Nothing

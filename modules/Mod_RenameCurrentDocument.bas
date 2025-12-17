@@ -1,4 +1,4 @@
-Attribute VB_Name = "NewMacros"
+Attribute VB_Name = "Mod_RenameCurrentDocument"
 Sub RenameCurrentDocument()
     Dim strOldPath As String
     Dim strNewName As String
@@ -54,3 +54,4 @@ Sub RenameCurrentDocument()
 ErrorHandler:
     MsgBox "发生错误，无法修改文件名。" & vbCrLf & "错误信息: " & Err.Description, vbCritical, "错误"
 End Sub
+

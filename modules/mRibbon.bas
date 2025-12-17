@@ -20,7 +20,7 @@ Public Sub Onload(ribbon As IRibbonUI)
 End Sub
 
 '=====================  导 入 样 式 (核 心 逻 辑)  =====================
-' 说明：已升级为“双重导入”策略，支持 -F 后缀及目录样式
+' 说明：双重导入策略，支持 -F 后缀及目录样式
 Public Sub AttachTemplate(ByVal control As IRibbonControl)
     Dim tmplPath As String
     Dim sourceDoc As Document
@@ -96,6 +96,11 @@ Public Sub AttachTemplate(ByVal control As IRibbonControl)
            "已成功导入 " & stylesList.count & " 个样式。", vbInformation, "导入成功"
 End Sub
 
+'=====================  应 用 样 式  =====================
+Private Sub ApplyStyle(ByVal styleName As String)
+    Selection.Style = ActiveDocument.Styles(styleName)
+End Sub
+
 '=====================  段 落 样 式  =====================
 Public Sub btnStyle_Click(ByVal control As IRibbonControl)
     On Error GoTo ErrH
@@ -139,17 +144,24 @@ Private Function EnsureMainTemplate() As Boolean
         MsgBox "请先加载 " & DEF_RIBBON_TMPL, vbCritical
 End Function
 
-'=====================  保护引用域/页码格式  =====================
-'应用样式 + 补 MERGEFORMAT
-Private Sub ApplyStyle(ByVal styleName As String)
-    Selection.Style = ActiveDocument.Styles(styleName)
-    AddMergeFormat
-End Sub
-
 '为选区内 REF/PAGEREF 加 \* MERGEFORMAT,保护域格式
+'包含智能判断(全文/选区) + 结果弹窗
 Private Sub AddMergeFormat()
     Dim fld As field, rng As Range
-    For Each fld In Selection.Fields
+    Dim targetFields As Fields ' 目标域集合
+    Dim msgTip As String       ' 提示信息
+
+    ' 判断：如果是光标插入点(wdSelectionIP)则处理全文，否则处理选区
+    If Selection.Type = wdSelectionIP Then
+        Set targetFields = ActiveDocument.Fields
+        msgTip = "未选中文字，已对【全文】域代码进行格式保护。"
+    Else
+        Set targetFields = Selection.Fields
+        msgTip = "已对【选中区域】域代码进行格式保护。"
+    End If
+
+    ' 遍历处理
+    For Each fld In targetFields
         If fld.Type = wdFieldRef Or fld.Type = wdFieldPageRef Then
             Set rng = fld.Code
             If InStr(1, rng.Text, "mergeformat", vbTextCompare) = 0 Then
@@ -158,8 +170,12 @@ Private Sub AddMergeFormat()
             End If
         End If
     Next fld
+
+    ' 操作完成后弹出提示
+    MsgBox msgTip, vbInformation, "操作完成"
 End Sub
 
+' 功能区按钮回调：调用上面的处理过程
 Sub RunAddMergeFormat(control As IRibbonControl)
     AddMergeFormat
 End Sub
@@ -248,13 +264,13 @@ Public Function GetMyMacroRegistry() As Variant
     
     ' 第1个
     items.Add Array("SetHyperlinksAndFieldsToBlue", _
-                    "超链接一键蓝字", _
-                    "智能遍历文档，将所有超链接和域（REF/PAGEREF等）的颜色设置为蓝色，但在处理过程中会自动排除图表题注。")
+                    "超链接和域批量设置为蓝色", _
+                    "智能遍历文档，将所有超链接和域（REF/PAGEREF等）的颜色设置为蓝色，但在处理过程中会自动排除图表题注和页码。")
       
     ' 第2个
     items.Add Array("Wrapper_RunAddMergeFormat", _
                     "域格式保护", _
-                    "扫描选区内的引用域，自动添加 \* MERGEFORMAT 开关，防止更新域后格式丢失。")
+                    "扫描全文或选区内的引用域，自动添加 \* MERGEFORMAT 开关，防止更新域后格式丢失。")
                     
     ' 第3个
     items.Add Array("BatchConvertWordToPDF", _
@@ -263,17 +279,21 @@ Public Function GetMyMacroRegistry() As Variant
     
     ' 第4个
     items.Add Array("BatchRenameFiles", _
-                    "一键修改文件名", _
+                    "文件名批量修改", _
                     "批量修改文件名" & vbCrLf & _
-                    "1. 仅保留汉字、字母、数字、中划线和下划线" & vbCrLf & _
-                    "2. 空格将被直接删除，其他非法字符替换为中划线 ""-""" & vbCrLf & _
+                    "1. 仅保留汉字、小写字母、数字、中划线和下划线" & vbCrLf & _
+                    "2. 空格将被直接删除，大写字母会替换为小写字母，其他非法字符替换为中划线 ""-""" & vbCrLf & _
                     "3. 支持“文件夹模式”和“多文件选择模式”" & vbCrLf & _
                     "4. 如果文件被占用无法重命名，自动创建改名后的副本")
     
     ' 第5个
     items.Add Array("ConvertHeadingNumbers", _
-                    "标题编号转文本", _
+                    "标题自动编号转文本", _
                     "将文档中所有标题（大纲 1-9 级）的自动编号转换为固定的静态文本。")
+    ' 第6个
+    items.Add Array("RenameCurrentDocument", _
+                    "重命名当前文件", _
+                    "无需关闭文件，直接重命名当前文件。")
 
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
