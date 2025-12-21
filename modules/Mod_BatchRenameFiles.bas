@@ -1,10 +1,10 @@
 Attribute VB_Name = "Mod_BatchRenameFiles"
 Sub BatchRenameFiles()
     ' ==============================================================================
-    ' 功能：批量清洗文件名
-    '       1. 仅保留汉字、小写字母、数字、中划线和下划线
-    '       2. 空格将被直接删除，大写字母会替换为小写字母，其他非法字符替换为中划线 "-"
-    '       3. 支持“文件夹模式”和“多文件选择模式”
+    ' 功能：批量修改文件名
+    '       1. 仅保留汉字、字母、数字、中划线和下划线
+    '       2. 空格将被直接删除，其他非法字符替换为中划线 "-"
+    '       3. 支持“文件夹模式”（包含所有子文件夹）和“多文件选择模式”
     '       4. 如果文件被占用无法重命名，自动创建改名后的副本
     ' ==============================================================================
 
@@ -20,16 +20,14 @@ Sub BatchRenameFiles()
     Dim regEx As Object
     Dim fso As Object
     Dim count As Integer
-    Dim copyCount As Integer ' 新增：统计创建副本的数量
+    Dim copyCount As Integer
     Dim i As Integer
     Dim newPath As String
     Dim dupCounter As Integer
-    Dim sourceFiles As Object
-    Dim oneFile As Object
     
     ' 1. 询问用户模式
     mode = MsgBox("请选择操作模式：" & vbCrLf & vbCrLf & _
-                  "【是 (Yes)】 选择一个文件夹 (处理该文件夹内所有文件)" & vbCrLf & _
+                  "【是 (Yes)】 选择一个文件夹 (递归处理所有子文件夹)" & vbCrLf & _
                   "【否 (No)】  选择具体文件 (支持按住Ctrl或Shift多选)", _
                   vbYesNoCancel + vbQuestion, "选择模式")
     
@@ -40,18 +38,14 @@ Sub BatchRenameFiles()
     
     ' 2. 根据模式获取文件列表
     If mode = vbYes Then
-        ' --- 文件夹模式 ---
+        ' --- 文件夹模式 (递归) ---
         Set fDialog = Application.FileDialog(msoFileDialogFolderPicker)
         fDialog.Title = "请选择包含待处理文件的文件夹"
         
         If fDialog.Show = -1 Then
             targetFolder = fDialog.SelectedItems(1)
-            Set sourceFiles = fso.GetFolder(targetFolder).Files
-            For Each oneFile In sourceFiles
-                If Left(oneFile.Name, 2) <> "~$" Then
-                    fileList.Add oneFile.Path
-                End If
-            Next oneFile
+            ' 调用递归过程获取所有子文件夹中的文件
+            RecursiveGetFiles fso.GetFolder(targetFolder), fileList
         Else
             Exit Sub
         End If
@@ -94,23 +88,18 @@ Sub BatchRenameFiles()
     For Each vFile In fileList
         fullPath = CStr(vFile)
         
+        ' 获取当前文件所在的文件夹路径（这对子文件夹中的文件很重要）
         targetFolder = fso.GetParentFolderName(fullPath) & "\"
         fileName = fso.GetFileName(fullPath)
         baseName = fso.GetBaseName(fullPath)
-        
-        ' 【修改点1】获取扩展名时强制转换为小写 (避免 .PDF 这种情况)
-        extName = "." & LCase(fso.GetExtensionName(fullPath))
+        extName = "." & fso.GetExtensionName(fullPath)
         If extName = "." Then extName = ""
         
         ' 清洗逻辑：先去空格，再替特殊字符
         baseName = Replace(baseName, " ", "")
-        
-        ' 【修改点2】将文件名主体强制转换为小写
-        baseName = LCase(baseName)
-        
         cleanName = regEx.Replace(baseName, "-")
         
-        If Len(cleanName) = 0 Then cleanName = "renamedfile" ' 默认名也改为小写
+        If Len(cleanName) = 0 Then cleanName = "RenamedFile"
         
         newFileName = cleanName & extName
         
@@ -138,7 +127,7 @@ Sub BatchRenameFiles()
                 Err.Clear
                 fso.CopyFile fullPath, newPath
                 If Err.Number = 0 Then
-                    copyCount = copyCount + 1 ' 副本创建成功
+                    copyCount = copyCount + 1
                 End If
             End If
             On Error GoTo 0
@@ -152,12 +141,37 @@ Sub BatchRenameFiles()
     MsgBox "处理完成！" & vbCrLf & _
            "直接重命名: " & count & " 个" & vbCrLf & _
            "创建副本(原文件被占用): " & copyCount & " 个", _
-           vbInformation, "文件名批量修改"
+           vbInformation, "批量修改文件名"
     
     Set regEx = Nothing
     Set fso = Nothing
     Set fDialog = Nothing
     Set fileList = Nothing
 
+End Sub
+
+' ==========================================
+' 辅助过程：递归获取文件夹及子文件夹下的所有文件
+' ==========================================
+Private Sub RecursiveGetFiles(ByVal oFolder As Object, ByRef colFiles As Collection)
+    Dim oFile As Object
+    Dim oSubFolder As Object
+    
+    On Error Resume Next ' 防止遇到无权限文件夹导致中断
+    
+    ' 1. 添加当前文件夹的文件
+    For Each oFile In oFolder.Files
+        ' 排除临时文件
+        If Left(oFile.Name, 2) <> "~$" Then
+            colFiles.Add oFile.Path
+        End If
+    Next oFile
+    
+    ' 2. 递归处理子文件夹
+    For Each oSubFolder In oFolder.SubFolders
+        RecursiveGetFiles oSubFolder, colFiles
+    Next oSubFolder
+    
+    On Error GoTo 0
 End Sub
 

@@ -279,7 +279,7 @@ Public Function GetMyMacroRegistry() As Variant
     
     ' 第4个
     items.Add Array("BatchRenameFiles", _
-                    "文件名批量修改", _
+                    "批量修改文件名", _
                     "批量修改文件名" & vbCrLf & _
                     "1. 仅保留汉字、小写字母、数字、中划线和下划线" & vbCrLf & _
                     "2. 空格将被直接删除，大写字母会替换为小写字母，其他非法字符替换为中划线 ""-""" & vbCrLf & _
@@ -294,6 +294,10 @@ Public Function GetMyMacroRegistry() As Variant
     items.Add Array("RenameCurrentDocument", _
                     "重命名当前文件", _
                     "无需关闭文件，直接重命名当前文件。")
+    ' 第7个
+    items.Add Array("BatchAutoFitTablesToWindow", _
+                    "批量表格自动调整表格", _
+                    "将文档中所有表格批量设置为“根据窗口自动调整”")
 
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
