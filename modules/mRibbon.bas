@@ -3,7 +3,6 @@ Option Explicit
 
 '=====================  模 块 级 变 量  =====================
 Private mRibbon       As IRibbonUI     '缓存 Ribbon
-Private mMainTemplate As Template      '缓存本模板（RAtools.dotm）
 
 '=====================  配 置 区 域  =====================
 ' 请根据您的实际环境修改此路径
@@ -104,7 +103,7 @@ End Sub
 '=====================  段 落 样 式  =====================
 Public Sub btnStyle_Click(ByVal control As IRibbonControl)
     On Error GoTo ErrH
-    ApplyStyle control.tag
+    ApplyStyle control.Tag
     Exit Sub
 ErrH:
     HandleStyleErr
@@ -113,8 +112,8 @@ End Sub
 '=====================  字 符 样 式  =====================
 Public Sub btnChar_Click(ByVal control As IRibbonControl)
     On Error GoTo ErrH
-    Dim s As String: targetStyle = control.tag
-    If Selection.Style = targetStyle Then targetStyle = "正文-F"
+    Dim s As String: targetStyle = control.Tag
+    If Selection.Style = targetStyle Then targetStyle = "正文-F" ' 重复点击后撤销样式
     ApplyStyle targetStyle
     Exit Sub
 ErrH:
@@ -290,18 +289,24 @@ Public Function GetMyMacroRegistry() As Variant
     items.Add Array("ConvertHeadingNumbers", _
                     "标题自动编号转文本", _
                     "将文档中所有标题（大纲 1-9 级）的自动编号转换为固定的静态文本。")
+    
     ' 第6个
     items.Add Array("RenameCurrentDocument", _
                     "重命名当前文件", _
                     "无需关闭文件，直接重命名当前文件。")
+    
     ' 第7个
+    items.Add Array("BatchSetMargins", _
+                    "一键设置页边距", _
+                    "一键将单个或多个文件页面上、下、左、右的页边距设置为 2.54厘米（即标准的 1 英寸）。")
+    
+    ' 第8个
     items.Add Array("BatchAutoFitTablesToWindow", _
                     "批量表格自动调整表格", _
                     "将文档中所有表格批量设置为“根据窗口自动调整”")
-
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
-    ' 如果需要 control 参数的宏，需要下面做一个 Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加
+    ' 如果需要control参数的宏，需要下面做一个Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加
     
     ' ================= 配置结束 =================
     
@@ -327,3 +332,4 @@ Public Sub Wrapper_RunAddMergeFormat()
     ' 只要原 Sub 内部没用到 control.ID 或 control.Tag，这样写就是安全的
     RunAddMergeFormat Nothing
 End Sub
+

@@ -72,7 +72,12 @@
 					<box id="boxFormat3" boxStyle="horizontal">
 						<button idMso="PasteSpecialDialog" showLabel="false"/>
                     </box>
-					<separator id="sepFaP1"/>
+					<separator id="sepFaP1"/>					
+                    <box id="boxQuickSettings" boxStyle="horizontal">
+                        <!-- 内置字号控件：显示当前字号，可直接输入修改 -->
+                        <control idMso="FontSize" showLabel="false"/>                       
+                    </box>
+                    <separator id="sepFaP_New"/>                    
                     <box id="boxFont1" boxStyle="horizontal">
                         <toggleButton idMso="Subscript"/>
                         <control idMso="FontColorPicker" showLabel="false"/>
@@ -98,6 +103,9 @@
 						</splitButton>
 					</box>
 					<box id="boxParagraph2" boxStyle="horizontal">
+						<gallery idMso="LineSpacingGallery" showLabel="false"/>
+					</box>
+					<box id="boxParagraph3" boxStyle="horizontal">
 						<button  idMso="ParagraphDialog" showLabel="false"/>
 					</box>
                 </group>
@@ -150,6 +158,7 @@
                         <toggleButton idMso="TableRepeatHeaderRows" showLabel="false"/>
                         <control idMso="TableSplitTable" showLabel="false"/>
 						<button id="btnT11" label="表标题-F" tag="表标题-F" image="TableTitle" size="normal" description="应用样式 表标题-F" screentip="表标题-F" showLabel="false" onAction="btnStyle_Click"/>
+						<button id="btnAutoFit" label="根据窗口调整" imageMso="TableAutoFitWindow" size="normal" description="根据窗口自动调整表格" screentip="根据窗口自动调整表格" showLabel="false" onAction="AutoFitTableWindow"/>
                     </box>
                 </group>
 
