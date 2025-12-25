@@ -5,9 +5,12 @@ Option Explicit
 Private mRibbon       As IRibbonUI     '缓存 Ribbon
 
 '=====================  配 置 区 域  =====================
-' 请根据您的实际环境修改此路径
-Private Const DEF_STYLE_FILE As String = "D:\RAtools\master-template-cn.dotx"
-Private Const DEF_RIBBON_TMPL As String = "RAtools.dotm"
+' 定义文件名前缀
+Private Const FILE_PREFIX As String = "RAtools"
+
+' 模板文件名定义
+Private Const FILE_NAME_CN As String = "master-template-cn.dotx"
+Private Const FILE_NAME_EN As String = "master-template-en.dotx"
 
 ' 定义要匹配的自定义后缀
 Private Const TARGET_SUFFIX As String = "-F"
@@ -18,8 +21,8 @@ Public Sub Onload(ribbon As IRibbonUI)
     Set mRibbon = ribbon
 End Sub
 
-'=====================  导 入 样 式 (核 心 逻 辑)  =====================
-' 说明：双重导入策略，支持 -F 后缀及目录样式
+'=====================  导 入 样 式  =====================
+' 说明：双重导入策略，避免后续段落样式丢失，支持 -F 后缀及目录样式
 Public Sub AttachTemplate(ByVal control As IRibbonControl)
     Dim tmplPath As String
     Dim sourceDoc As Document
@@ -27,11 +30,10 @@ Public Sub AttachTemplate(ByVal control As IRibbonControl)
     Dim sty As Style
     Dim stylesList As New Collection ' 使用集合暂存样式名
     Dim vStyleName As Variant
-    Dim importCount As Integer
     Dim pass As Integer
     Dim sName As String
     
-    ' 1. 获取路径 (复用 mRibbon 原有的路径获取函数)
+    ' 1. 获取路径
     tmplPath = GetStyleFilePath
     If tmplPath = "" Then Exit Sub
     
@@ -63,30 +65,54 @@ Public Sub AttachTemplate(ByVal control As IRibbonControl)
         End If
     Next sty
     
-    ' 如果没有找到任何样式，直接退出
+    ' 在获取完名单后，立即关闭模版。
+    ' 这样 OrganizerCopy 在运行时，文件是关闭状态，就不会产生冲突。
+    sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
+    Set sourceDoc = Nothing
+    
+    ' 如果没有找到任何样式，退出
     If stylesList.count = 0 Then
-        sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
         Application.ScreenUpdating = True
         MsgBox "模版中没有找到符合条件（-F 或 TOC）的样式。", vbExclamation
         Exit Sub
     End If
     
+    ' ================= 强 制 清 理 逻 辑 =================
+    ' 导入前删除当前文档中所有以 -F 结尾的样式
+    
+    Dim i As Long
+    Dim docStyName As String
+    
+    ' 倒序遍历，防止删除时索引错位
+    For i = currentDoc.Styles.count To 1 Step -1
+        docStyName = currentDoc.Styles(i).NameLocal
+        
+        ' 只删除以 -F 结尾的样式
+        If UCase(Right(docStyName, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX) Then
+            On Error Resume Next
+            currentDoc.Styles(i).Delete
+            On Error GoTo 0
+        End If
+    Next i
+    ' ================= 清 理 结 束 =================
+    
     ' 3. 执行“双重导入”策略
     ' 第一遍：创建样式实体（此时基于 BaseOn 的链接可能会断裂）
     ' 第二遍：覆盖样式定义（修复链接关系）
+    
+    ' 注意：这里 Source 使用的是 tmplPath (字符串路径)，而不是 sourceDoc.FullName
     For pass = 1 To 2
         For Each vStyleName In stylesList
+            ' 增加容错，防止某个样式复制失败卡死整个循环
+            On Error Resume Next
             Application.OrganizerCopy _
-                Source:=sourceDoc.FullName, _
+                Source:=tmplPath, _
                 Destination:=currentDoc.FullName, _
                 Name:=vStyleName, _
                 Object:=wdOrganizerObjectStyles
+            On Error GoTo 0
         Next vStyleName
     Next pass
-    
-    ' 4. 清理工作
-    sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
-    Set sourceDoc = Nothing
     
     Application.ScreenUpdating = True
     
@@ -95,9 +121,121 @@ Public Sub AttachTemplate(ByVal control As IRibbonControl)
            "已成功导入 " & stylesList.count & " 个样式。", vbInformation, "导入成功"
 End Sub
 
+'=====================  智 能 样 式 映 射  =====================
+' 作用：将 UI 传来的中文标签（如“标题1-F”）转换为文档中实际存在的样式名（可能是“Heading 1-F”）
+Private Function GetTargetStyleName(ByVal uiTagName As String) As String
+    Dim doc As Document
+    Set doc = ActiveDocument
+    
+    ' 1. 优先检查：如果文档中直接存在该中文样式，直接返回
+    ' 这样保证了中文模板加载时，速度最快且完全兼容
+    If StyleExists(doc, uiTagName) Then
+        GetTargetStyleName = uiTagName
+        Exit Function
+    End If
+    
+    ' 2. 映射检查：如果中文找不到，尝试查找对应的英文名称
+    ' 【注意】这里列出了常见的英文样式名，请确保与 master-template-en.dotx 中的实际名称一致
+    Dim mapName As String
+    mapName = ""
+    
+    Select Case uiTagName
+        ' --- 基础样式 ---
+        Case "正文-F":       mapName = "Body Text with Indentation-F"
+        Case "正文无缩进-F": mapName = "Body Text-F"
+        Case "正文无间距-F": mapName = "Body Text no Space-F"
+        Case "标题居中-F":   mapName = "Heading Center-F"
+        Case "标题左对齐-F": mapName = "THeading Left-F"
+        Case "目录标题-F":   mapName = "TOC Heading-F"
+        
+        ' --- 标题类 ---
+        Case "标题1-F": mapName = "Heading 1-F"
+        Case "标题2-F": mapName = "Heading 2-F"
+        Case "标题3-F": mapName = "Heading 3-F"
+        Case "标题4-F": mapName = "Heading 4-F"
+        Case "标题5-F": mapName = "Heading 5-F"
+        Case "标题6-F": mapName = "Heading 6-F"
+        Case "标题7-F": mapName = "Heading 7-F"
+        Case "标题8-F": mapName = "Heading 8-F"
+        Case "标题9-F": mapName = "Heading 9-F"
+        Case "无编号标题1-F": mapName = "UN Heading 1-F"
+        Case "无编号标题2-F": mapName = "UN Heading 2-F"
+        Case "无编号标题3-F": mapName = "UN Heading 3-F"
+        Case "无编号标题4-F": mapName = "UN Heading 4-F"
+        Case "无编号标题5-F": mapName = "UN Heading 5-F"
+        Case "无编号标题6-F": mapName = "UN Heading 6-F"
+        Case "无编号标题7-F": mapName = "UN Heading 7-F"
+        Case "无编号标题8-F": mapName = "UN Heading 8-F"
+        Case "无编号标题9-F": mapName = "UN Heading 9-F"
+        Case "附录标题-F": mapName = "Appendix Title-F"
+        
+        ' --- 表格类 ---
+        Case "表头左对齐-F": mapName = "Table Heading Left-F"
+        Case "表头居中-F":   mapName = "Table Heading Center-F"
+        Case "表头右对齐-F": mapName = "Table Heading Right-F"
+        Case "表格文本左对齐-F": mapName = "Table Cell Left-F"
+        Case "表格文本居中-F":   mapName = "Table Cell Center-F"
+        Case "表格文本右对齐-F": mapName = "Table Cell Right-F"
+        Case "表格文本无间距-F": mapName = "Table Cell no Space-F"
+        Case "表格编号列表-F": mapName = "Table List Number-F"
+        Case "表格项目符号列表-F": mapName = "Table List Bullet-F"
+        Case "表格注释-F":   mapName = "Table Note-F"
+        Case "表标题-F":     mapName = "Table Title-F"
+        
+        ' --- 图片类 ---
+        Case "图片-F":       mapName = "Figure-F"
+        Case "图标题-F":     mapName = "Figure Title-F"
+        
+        ' --- 列表类 ---
+        Case "编号列表-F":     mapName = "List Number-F"
+        Case "项目符号列表-F": mapName = "List Bullet-F"
+        Case "参考文献列表-F": mapName = "List Reference-F"
+        
+        ' --- 其他 ---
+        Case "页眉-F": mapName = "Header-F"
+        Case "页脚-F": mapName = "Footer-F"
+        Case "脚注-F": mapName = "Footnote-F"
+        Case "超链接-F": mapName = "Hyperlink-F"
+        Case "指导-F": mapName = "Instruction-F"
+        
+            
+    End Select
+    
+    ' 3. 如果找到了映射名，检查文档里是否存在这个英文样式
+    If mapName <> "" Then
+        If StyleExists(doc, mapName) Then
+            GetTargetStyleName = mapName
+            Exit Function
+        End If
+    End If
+    
+    ' 4. 如果都没找到，还是返回原始标签（让它在 ApplyStyle 里正常报错）
+    GetTargetStyleName = uiTagName
+End Function
+
+' 辅助函数：检查样式是否存在
+Private Function StyleExists(doc As Document, sName As String) As Boolean
+    On Error Resume Next
+    Dim s As Style
+    Set s = doc.Styles(sName)
+    StyleExists = (Err.Number = 0)
+    On Error GoTo 0
+End Function
+
 '=====================  应 用 样 式  =====================
-Private Sub ApplyStyle(ByVal styleName As String)
-    Selection.Style = ActiveDocument.Styles(styleName)
+Private Sub ApplyStyle(ByVal uiTagName As String)
+    Dim realStyleName As String
+    
+    ' 获取实际样式名（自动处理中英文映射）
+    realStyleName = GetTargetStyleName(uiTagName)
+    
+    ' 尝试应用样式
+    On Error GoTo ErrH
+    Selection.Style = ActiveDocument.Styles(realStyleName)
+    Exit Sub
+    
+ErrH:
+    HandleStyleErr
 End Sub
 
 '=====================  段 落 样 式  =====================
@@ -112,10 +250,27 @@ End Sub
 '=====================  字 符 样 式  =====================
 Public Sub btnChar_Click(ByVal control As IRibbonControl)
     On Error GoTo ErrH
-    Dim s As String: targetStyle = control.Tag
-    If Selection.Style = targetStyle Then targetStyle = "正文-F" ' 重复点击后撤销样式
-    ApplyStyle targetStyle
+    
+    Dim uiTagName As String
+    Dim realStyleName As String
+    Dim defaultStyleName As String
+    
+    uiTagName = control.Tag
+    
+    ' 1. 获取目标样式的真实名称 (比如 "Heading 1-F")
+    realStyleName = GetTargetStyleName(uiTagName)
+    
+    ' 2. 检查当前是否已经是该样式 (用于重复点击取消)
+    If Selection.Style = realStyleName Then
+        ' 也要动态获取“正文-F”的实际名称 (可能是 "Body Text-F")
+        defaultStyleName = GetTargetStyleName("正文-F")
+        realStyleName = defaultStyleName
+    End If
+    
+    ' 3. 应用样式
+    Selection.Style = ActiveDocument.Styles(realStyleName)
     Exit Sub
+    
 ErrH:
     HandleStyleErr
 End Sub
@@ -127,12 +282,14 @@ Public Sub btnCap_Click(ByVal control As IRibbonControl)
 End Sub
 
 '=====================  私 有 过 程  =====================
-'确保 mMainTemplate 已指向 RATools.dotm
+' 确保加载逻辑支持版本号匹配
 Private Function EnsureMainTemplate() As Boolean
+    Dim mMainTemplate As Template
     If mMainTemplate Is Nothing Then
         Dim t As Template
         For Each t In Templates
-            If StrComp(t.Name, DEF_RIBBON_TMPL, vbTextCompare) = 0 Then
+            ' 模糊匹配：只要文件名以 RAtools 开头，且是 .dotm 结尾即可
+            If UCase(t.Name) Like UCase(FILE_PREFIX) & "*.DOTM" Then
                 Set mMainTemplate = t
                 Exit For
             End If
@@ -140,7 +297,7 @@ Private Function EnsureMainTemplate() As Boolean
     End If
     EnsureMainTemplate = Not mMainTemplate Is Nothing
     If Not EnsureMainTemplate Then _
-        MsgBox "请先加载 " & DEF_RIBBON_TMPL, vbCritical
+        MsgBox "未检测到以 " & FILE_PREFIX & " 开头的加载项！", vbCritical
 End Function
 
 '为选区内 REF/PAGEREF 加 \* MERGEFORMAT,保护域格式
@@ -188,14 +345,83 @@ Private Sub HandleStyleErr()
     End If
 End Sub
 
-'取主模板路径（默认/浏览）
+' 获取路径函数
+' 逻辑：
+' 1. 获取 RAtools.dotm 所在目录
+' 2. 检测该目录下是否存在 -cn.dotx 和 -en.dotx
+' 3. 根据存在情况决定直接加载或弹窗选择
 Private Function GetStyleFilePath() As String
-    If Dir(DEF_STYLE_FILE) <> "" Then
-        GetStyleFilePath = DEF_STYLE_FILE
+    Dim basePath As String
+    Dim pathCN As String, pathEN As String
+    Dim existCN As Boolean, existEN As Boolean
+    Dim t As Template
+    
+    ' 1. 获取 RAtools.dotm (本工具) 的所在路径
+    ' 尝试通过 ThisDocument 获取（如果代码就在该模板里）
+    On Error Resume Next
+    basePath = ThisDocument.Path
+    If Err.Number <> 0 Or basePath = "" Then
+        ' 如果失败（比如代码被导入其他地方），则遍历模板集合寻找 RAtools*.dotm
+        Err.Clear
+        For Each t In Templates
+            ' 模糊匹配：支持 RAtools_v1.0.dotm 等变体
+            If UCase(t.Name) Like UCase(FILE_PREFIX) & "*.DOTM" Then
+                basePath = t.Path
+                Exit For
+            End If
+        Next
+    End If
+    On Error GoTo 0
+    
+    ' 如果仍找不到路径（极少见情况），跳到手动选择
+    If basePath = "" Then GoTo ManualSelect
+    
+    ' 2. 构建目标文件路径
+    pathCN = basePath & Application.PathSeparator & FILE_NAME_CN
+    pathEN = basePath & Application.PathSeparator & FILE_NAME_EN
+    
+    existCN = (Dir(pathCN) <> "")
+    existEN = (Dir(pathEN) <> "")
+    
+    ' 3. 判断逻辑
+    If existCN And existEN Then
+        ' 都有：弹窗选择
+        Dim ans As VbMsgBoxResult
+        ans = MsgBox("在工具目录下检测到中英文两种模板：" & vbCrLf & vbCrLf & _
+                     "【是 (Yes)】 加载中文模板 (-cn)" & vbCrLf & _
+                     "【否 (No)】  加载英文模板 (-en)" & vbCrLf & vbCrLf & _
+                     "点击【取消】手动选择其他文件。", _
+                     vbYesNoCancel + vbQuestion, "选择样式模板")
+                     
+        If ans = vbYes Then
+            GetStyleFilePath = pathCN
+            Exit Function
+        ElseIf ans = vbNo Then
+            GetStyleFilePath = pathEN
+            Exit Function
+        Else
+            ' 用户点击取消，进入手动选择
+            GoTo ManualSelect
+        End If
+        
+    ElseIf existCN Then
+        ' 只有中文
+        GetStyleFilePath = pathCN
+        Exit Function
+        
+    ElseIf existEN Then
+        ' 只有英文
+        GetStyleFilePath = pathEN
         Exit Function
     End If
     
-    If MsgBox("默认位置找不到主模板，是否手动选择？", vbYesNo + vbQuestion) = vbNo Then Exit Function
+    ' 如果都不存在，进入下面的手动选择逻辑
+
+ManualSelect:
+    If MsgBox("在工具同级目录下未找到默认样式模板：" & vbCrLf & _
+              FILE_NAME_CN & vbCrLf & _
+              FILE_NAME_EN & vbCrLf & vbCrLf & _
+              "是否手动选择文件？", vbYesNo + vbQuestion) = vbNo Then Exit Function
     
     With Application.FileDialog(msoFileDialogFilePicker)
         .AllowMultiSelect = False
@@ -257,7 +483,7 @@ Public Function GetMyMacroRegistry() As Variant
     Dim vArr() As Variant
     Dim i As Long
     
-    ' ================= 配置区域：Array(英文代码, 简短名称, 详细描述) =================
+    ' ================= 配置区域 =================
     
     ' 格式：items.Add Array("宏代码名", "列表显示的名称", "下方显示的详细介绍")
     
@@ -302,8 +528,8 @@ Public Function GetMyMacroRegistry() As Variant
     
     ' 第8个
     items.Add Array("BatchAutoFitTablesToWindow", _
-                    "批量表格自动调整表格", _
-                    "将文档中所有表格批量设置为“根据窗口自动调整”")
+                    "批量表格自动调整", _
+                    "将文档中所有表格批量设置为“根据窗口自动调整”。")
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
     ' 如果需要control参数的宏，需要下面做一个Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加
@@ -332,4 +558,6 @@ Public Sub Wrapper_RunAddMergeFormat()
     ' 只要原 Sub 内部没用到 control.ID 或 control.Tag，这样写就是安全的
     RunAddMergeFormat Nothing
 End Sub
+
+
 
