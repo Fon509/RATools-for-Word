@@ -431,6 +431,40 @@ ManualSelect:
     End With
 End Function
 
+'================  段前分页切换  ================
+' 说明：切换选中段落的“段前分页”属性 (PageBreakBefore)
+' 逻辑：如果是混合状态或关闭状态 -> 设为开启；如果是纯开启状态 -> 设为关闭
+Public Sub TogglePageBreakBefore(control As IRibbonControl)
+    On Error Resume Next
+    Dim currentStatus As Long
+    
+    ' 获取当前选中段落的段前分页状态
+    ' 0 = False (关), -1 = True (开), 9999999 = wdUndefined (混合)
+    currentStatus = Selection.ParagraphFormat.PageBreakBefore
+    
+    ' 如果全关(0)，则开启(-1)
+    ' 如果混合(wdUndefined)，也统一开启(-1)
+    ' 如果全开(-1)，则关闭(0)
+    If currentStatus = -1 Then
+        Selection.ParagraphFormat.PageBreakBefore = 0 ' 关闭
+    Else
+        Selection.ParagraphFormat.PageBreakBefore = -1 ' 开启
+    End If
+End Sub
+
+'================  表格功能：根据窗口自动调整  ================
+Public Sub AutoFitTableWindow(control As IRibbonControl)
+    On Error Resume Next
+    
+    ' 检查光标是否在表格内
+    If Selection.Information(wdWithInTable) Then
+        ' 将当前所在的表格设置为：根据窗口自动调整
+        Selection.Tables(1).AutoFitBehavior wdAutoFitWindow
+    Else
+        MsgBox "请先将光标定位在表格内部。", vbExclamation, "提示"
+    End If
+End Sub
+
 '================  下拉选择对齐方式  ================
 '================  下拉菜单：左对齐  ================
 Public Sub AlignLeft_Click(control As IRibbonControl)
@@ -507,7 +541,7 @@ Public Function GetMyMacroRegistry() As Variant
                     "批量修改文件名", _
                     "批量修改文件名" & vbCrLf & _
                     "1. 仅保留汉字、小写字母、数字、中划线和下划线" & vbCrLf & _
-                    "2. 空格将被直接删除，大写字母会替换为小写字母，其他非法字符替换为中划线 ""-""" & vbCrLf & _
+                    "2. 汉字与字符间的空格（以及其他剩余空格）直接删除，字母数字间的空格改为中划线 ""-""，其他非法字符替换为中划线 ""-""" & vbCrLf & _
                     "3. 支持“文件夹模式”和“多文件选择模式”" & vbCrLf & _
                     "4. 如果文件被占用无法重命名，自动创建改名后的副本")
     

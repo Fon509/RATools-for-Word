@@ -107,6 +107,14 @@
 					</box>
 					<box id="boxParagraph3" boxStyle="horizontal">
 						<button  idMso="ParagraphDialog" showLabel="false"/>
+						<!-- 段前分页按钮 -->
+                        <button id="btnPageBreakBefore" 
+                                label="段前分页" 
+                                image="PageBreakBefore" 
+                                onAction="TogglePageBreakBefore" 
+                                showLabel="false" 
+                                screentip="段前分页" 
+                                description="切换选中段落的“段前分页”属性"/>
 					</box>
                 </group>
 				

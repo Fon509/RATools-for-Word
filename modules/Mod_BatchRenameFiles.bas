@@ -3,9 +3,11 @@ Sub BatchRenameFiles()
     ' ==============================================================================
     ' 功能：批量修改文件名
     '       1. 仅保留汉字、字母、数字、中划线和下划线
-    '       2. 空格将被直接删除，其他非法字符替换为中划线 "-"
-    '       3. 支持“文件夹模式”（包含所有子文件夹）和“多文件选择模式”
-    '       4. 如果文件被占用无法重命名，自动创建改名后的副本
+    '       2. 所有字母统一转换为小写
+    '       3. 字母/数字间的空格改为中划线 "-"
+    '       4. 汉字与字符间的空格（以及其他剩余空格）直接删除
+    '       5. 其他非法字符替换为中划线 "-"
+    '       6. 自动递归处理子文件夹，被占用文件自动创建副本
     ' ==============================================================================
 
     Dim fDialog As FileDialog
@@ -17,7 +19,8 @@ Sub BatchRenameFiles()
     Dim fileName As String, newFileName As String
     Dim baseName As String, extName As String
     Dim cleanName As String
-    Dim regEx As Object
+    Dim regExClean As Object
+    Dim regExSpace As Object
     Dim fso As Object
     Dim count As Integer
     Dim copyCount As Integer
@@ -44,7 +47,6 @@ Sub BatchRenameFiles()
         
         If fDialog.Show = -1 Then
             targetFolder = fDialog.SelectedItems(1)
-            ' 调用递归过程获取所有子文件夹中的文件
             RecursiveGetFiles fso.GetFolder(targetFolder), fileList
         Else
             Exit Sub
@@ -71,13 +73,24 @@ Sub BatchRenameFiles()
         Exit Sub
     End If
     
-    ' 3. 初始化正则
-    Set regEx = CreateObject("VBScript.RegExp")
-    With regEx
+    ' 3. 初始化正则对象
+    
+    ' (A) 清理非法字符正则：仅保留 a-z, 0-9, -, _, 汉字
+    Set regExClean = CreateObject("VBScript.RegExp")
+    With regExClean
         .Global = True
         .IgnoreCase = True
-        ' 允许范围：a-z, A-Z, 0-9, -, _, 汉字
-        .Pattern = "[^a-zA-Z0-9\-\_" & ChrW(&H4E00) & "-" & ChrW(&H9FA5) & "]"
+        .Pattern = "[^a-z0-9\-\_" & ChrW(&H4E00) & "-" & ChrW(&H9FA5) & "]"
+    End With
+    
+    ' (B) 空格处理正则：匹配 "字母或数字 + 空格 + 字母或数字" 的情况
+    ' 用于将单词间的空格转为中划线
+    Set regExSpace = CreateObject("VBScript.RegExp")
+    With regExSpace
+        .Global = True
+        .IgnoreCase = True
+        ' Lookahead断言：匹配一个字符和空格，且后面紧跟着另一个字符
+        .Pattern = "([a-z0-9])\s+(?=[a-z0-9])"
     End With
     
     count = 0
@@ -88,18 +101,31 @@ Sub BatchRenameFiles()
     For Each vFile In fileList
         fullPath = CStr(vFile)
         
-        ' 获取当前文件所在的文件夹路径（这对子文件夹中的文件很重要）
         targetFolder = fso.GetParentFolderName(fullPath) & "\"
         fileName = fso.GetFileName(fullPath)
         baseName = fso.GetBaseName(fullPath)
         extName = "." & fso.GetExtensionName(fullPath)
         If extName = "." Then extName = ""
         
-        ' 清洗逻辑：先去空格，再替特殊字符
-        baseName = Replace(baseName, " ", "")
-        cleanName = regEx.Replace(baseName, "-")
+        ' --- 核心处理逻辑开始 ---
         
-        If Len(cleanName) = 0 Then cleanName = "RenamedFile"
+        ' 步骤 1：转换为小写
+        baseName = LCase(baseName)
+        extName = LCase(extName)
+        
+        ' 步骤 2：处理空格
+        ' 情况A：字母/数字 之间的空格 -> 替换为中划线 (例如: "file 01" -> "file-01")
+        baseName = regExSpace.Replace(baseName, "$1-")
+        
+        ' 情况B：剩余的所有空格（包括汉字与字母间、汉字间） -> 直接删除 (例如: "测试 file" -> "测试file")
+        baseName = Replace(baseName, " ", "")
+        
+        ' 步骤 3：清理非法字符（替换为中划线）
+        cleanName = regExClean.Replace(baseName, "-")
+        
+        ' --- 核心处理逻辑结束 ---
+        
+        If Len(cleanName) = 0 Then cleanName = "renamed-file"
         
         newFileName = cleanName & extName
         
@@ -117,13 +143,11 @@ Sub BatchRenameFiles()
             ' 尝试重命名或复制
             On Error Resume Next
             Err.Clear
-            Name fullPath As newPath ' 尝试直接重命名
+            Name fullPath As newPath
             
             If Err.Number = 0 Then
-                ' 重命名成功
                 count = count + 1
             Else
-                ' 重命名失败（通常因为文件被打开），尝试创建副本
                 Err.Clear
                 fso.CopyFile fullPath, newPath
                 If Err.Number = 0 Then
@@ -143,7 +167,8 @@ Sub BatchRenameFiles()
            "创建副本(原文件被占用): " & copyCount & " 个", _
            vbInformation, "批量修改文件名"
     
-    Set regEx = Nothing
+    Set regExClean = Nothing
+    Set regExSpace = Nothing
     Set fso = Nothing
     Set fDialog = Nothing
     Set fileList = Nothing
@@ -157,17 +182,14 @@ Private Sub RecursiveGetFiles(ByVal oFolder As Object, ByRef colFiles As Collect
     Dim oFile As Object
     Dim oSubFolder As Object
     
-    On Error Resume Next ' 防止遇到无权限文件夹导致中断
+    On Error Resume Next
     
-    ' 1. 添加当前文件夹的文件
     For Each oFile In oFolder.Files
-        ' 排除临时文件
         If Left(oFile.Name, 2) <> "~$" Then
             colFiles.Add oFile.Path
         End If
     Next oFile
     
-    ' 2. 递归处理子文件夹
     For Each oSubFolder In oFolder.SubFolders
         RecursiveGetFiles oSubFolder, colFiles
     Next oSubFolder
