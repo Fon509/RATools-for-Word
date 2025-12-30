@@ -534,7 +534,7 @@ Public Function GetMyMacroRegistry() As Variant
     ' 第3个
     items.Add Array("BatchConvertWordToPDF", _
                     "Word批量转PDF", _
-                    "批量将Word转为PDF，并通过Word标题创建PDF书签。")
+                    "批量将单个或多个Word转为PDF，并通过Word标题创建PDF书签。")
     
     ' 第4个
     items.Add Array("BatchRenameFiles", _
@@ -557,13 +557,18 @@ Public Function GetMyMacroRegistry() As Variant
     
     ' 第7个
     items.Add Array("BatchSetMargins", _
-                    "一键设置页边距", _
-                    "一键将单个或多个文件页面上、下、左、右的页边距设置为 2.54厘米（即标准的 1 英寸）。")
+                    "批量设置页边距", _
+                    "批量将单个或多个文档页面上、下、左、右的页边距设置为 2.54厘米（即标准的 1 英寸）。")
     
     ' 第8个
     items.Add Array("BatchAutoFitTablesToWindow", _
-                    "批量表格自动调整", _
+                    "一键表格自动调整", _
                     "将文档中所有表格批量设置为“根据窗口自动调整”。")
+                    
+    ' 第9个
+    items.Add Array("BatchAcceptAndClean", _
+                    "批量接受修订并删除批注", _
+                    "批量将单个或多个文档的tracking版转换为clean版，接受所有修订并停止修订同时删除文档中的所有批注。")
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
     ' 如果需要control参数的宏，需要下面做一个Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加

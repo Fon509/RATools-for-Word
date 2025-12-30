@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmMacroList
    ClientTop       =   456
    ClientWidth     =   7800
    OleObjectBlob   =   "frmMacroList.frx":0000
+   ShowModal       =   0   'False
    StartUpPosition =   1  '所有者中心
 End
 Attribute VB_Name = "frmMacroList"
@@ -20,7 +21,7 @@ Private m_AllMacros As Variant
 
 Private Sub UserForm_Initialize()
     ' --- 1. 界面美化 ---
-    Me.Caption = "宏列表管理器"
+    Me.Caption = "宏管理器"
     
     With Me.lstMacros.Font
         .Name = "微软雅黑"
@@ -127,6 +128,7 @@ Private Sub RefreshList(keyword As String)
 End Sub
 
 Private Sub btnRun_Click()
+    ' 1. 检查是否选择了功能
     If Me.lstMacros.ListIndex = -1 Then
         MsgBox "请先选择一个功能！", vbExclamation
         Exit Sub
@@ -135,15 +137,18 @@ Private Sub btnRun_Click()
     Dim macroName As String
     ' 读取第1列(隐藏的英文名)
     macroName = Me.lstMacros.List(Me.lstMacros.ListIndex, 0)
-    
-    Me.Hide
+       
+    ' 2. 容错运行
     On Error GoTo ErrH
+    
+    ' 核心只有这一句：运行宏
     Application.Run macroName
-    Unload Me
+    
     Exit Sub
+
 ErrH:
     MsgBox "运行出错：" & Err.Description, vbCritical
-    Me.Show
+    ' 出错也不用 Me.Show 了，因为窗体本来就没关
 End Sub
 
 Private Sub btnRefresh_Click()
