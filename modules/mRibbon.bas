@@ -2,23 +2,50 @@ Attribute VB_Name = "mRibbon"
 Option Explicit
 
 '=====================  模 块 级 变 量  =====================
-Private mRibbon       As IRibbonUI     '缓存 Ribbon
+Public mRibbon        As IRibbonUI     ' 缓存 Ribbon (改为 Public 以便调试)
+Private mAppEvents    As clsAppEvents  ' 事件监听对象
 
 '=====================  配 置 区 域  =====================
-' 定义文件名前缀
 Private Const FILE_PREFIX As String = "RAtools"
-
-' 模板文件名定义
 Private Const FILE_NAME_CN As String = "master-template-cn.dotx"
 Private Const FILE_NAME_EN As String = "master-template-en.dotx"
-
-' 定义要匹配的自定义后缀
 Private Const TARGET_SUFFIX As String = "-F"
 
 '=====================  Ribbon 必 要 回 调  =====================
-'Ribbon OnLoad
+' Ribbon 加载完成时触发
 Public Sub Onload(ribbon As IRibbonUI)
     Set mRibbon = ribbon
+    InitEvents
+    ActivateRAToolsTab
+End Sub
+
+'=====================  事 件 初 始 化  =====================
+Public Sub InitEvents()
+    If mAppEvents Is Nothing Then
+        Set mAppEvents = New clsAppEvents
+    End If
+End Sub
+
+' 供外部调用的激活方法 (使用极速异步模式)
+Public Sub ActivateRAToolsTab()
+    ' 使用 Now 可以在当前所有操作完成后立即执行
+    Application.OnTime Now, "DoActivateTab"
+    
+    ' 确保监听器在线
+    If mAppEvents Is Nothing Then InitEvents
+End Sub
+
+' 真正的执行过程
+Public Sub DoActivateTab()
+    On Error Resume Next
+    If Not mRibbon Is Nothing Then
+        mRibbon.ActivateTab "RATool"
+    End If
+End Sub
+
+' AutoExec 宏
+Public Sub AutoExec()
+    InitEvents
 End Sub
 
 '=====================  导 入 样 式  =====================
@@ -124,12 +151,12 @@ End Sub
 '=====================  智 能 样 式 映 射  =====================
 ' 作用：将 UI 传来的中文标签（如“标题1-F”）转换为文档中实际存在的样式名（可能是“Heading 1-F”）
 Private Function GetTargetStyleName(ByVal uiTagName As String) As String
-    Dim doc As Document
-    Set doc = ActiveDocument
+    Dim Doc As Document
+    Set Doc = ActiveDocument
     
     ' 1. 优先检查：如果文档中直接存在该中文样式，直接返回
     ' 这样保证了中文模板加载时，速度最快且完全兼容
-    If StyleExists(doc, uiTagName) Then
+    If StyleExists(Doc, uiTagName) Then
         GetTargetStyleName = uiTagName
         Exit Function
     End If
@@ -203,7 +230,7 @@ Private Function GetTargetStyleName(ByVal uiTagName As String) As String
     
     ' 3. 如果找到了映射名，检查文档里是否存在这个英文样式
     If mapName <> "" Then
-        If StyleExists(doc, mapName) Then
+        If StyleExists(Doc, mapName) Then
             GetTargetStyleName = mapName
             Exit Function
         End If
@@ -214,10 +241,10 @@ Private Function GetTargetStyleName(ByVal uiTagName As String) As String
 End Function
 
 ' 辅助函数：检查样式是否存在
-Private Function StyleExists(doc As Document, sName As String) As Boolean
+Private Function StyleExists(Doc As Document, sName As String) As Boolean
     On Error Resume Next
     Dim s As Style
-    Set s = doc.Styles(sName)
+    Set s = Doc.Styles(sName)
     StyleExists = (Err.Number = 0)
     On Error GoTo 0
 End Function
@@ -597,6 +624,4 @@ Public Sub Wrapper_RunAddMergeFormat()
     ' 只要原 Sub 内部没用到 control.ID 或 control.Tag，这样写就是安全的
     RunAddMergeFormat Nothing
 End Sub
-
-
 
