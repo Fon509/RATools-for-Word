@@ -151,12 +151,12 @@ End Sub
 '=====================  智 能 样 式 映 射  =====================
 ' 作用：将 UI 传来的中文标签（如“标题1-F”）转换为文档中实际存在的样式名（可能是“Heading 1-F”）
 Private Function GetTargetStyleName(ByVal uiTagName As String) As String
-    Dim Doc As Document
-    Set Doc = ActiveDocument
+    Dim doc As Document
+    Set doc = ActiveDocument
     
     ' 1. 优先检查：如果文档中直接存在该中文样式，直接返回
     ' 这样保证了中文模板加载时，速度最快且完全兼容
-    If StyleExists(Doc, uiTagName) Then
+    If StyleExists(doc, uiTagName) Then
         GetTargetStyleName = uiTagName
         Exit Function
     End If
@@ -230,7 +230,7 @@ Private Function GetTargetStyleName(ByVal uiTagName As String) As String
     
     ' 3. 如果找到了映射名，检查文档里是否存在这个英文样式
     If mapName <> "" Then
-        If StyleExists(Doc, mapName) Then
+        If StyleExists(doc, mapName) Then
             GetTargetStyleName = mapName
             Exit Function
         End If
@@ -241,10 +241,10 @@ Private Function GetTargetStyleName(ByVal uiTagName As String) As String
 End Function
 
 ' 辅助函数：检查样式是否存在
-Private Function StyleExists(Doc As Document, sName As String) As Boolean
+Private Function StyleExists(doc As Document, sName As String) As Boolean
     On Error Resume Next
     Dim s As Style
-    Set s = Doc.Styles(sName)
+    Set s = doc.Styles(sName)
     StyleExists = (Err.Number = 0)
     On Error GoTo 0
 End Function
@@ -306,6 +306,12 @@ End Sub
 Public Sub btnCap_Click(ByVal control As IRibbonControl)
     On Error Resume Next
     Selection.Range.Case = wdUpperCase
+End Sub
+
+'================  设置文字为蓝色  ================
+Public Sub SetTextBlue(control As IRibbonControl)
+    On Error Resume Next
+    Selection.Font.Color = wdColorBlue
 End Sub
 
 '=====================  私 有 过 程  =====================
@@ -596,6 +602,11 @@ Public Function GetMyMacroRegistry() As Variant
     items.Add Array("BatchAcceptAndClean", _
                     "批量接受修订并删除批注", _
                     "批量将单个或多个文档的tracking版转换为clean版，接受所有修订并停止修订同时删除文档中的所有批注。")
+                    
+    ' 第10个
+    items.Add Array("LinkToThePreviousSection", _
+                    "页眉和页脚设置为“链接到前一节”", _
+                    "遍历文档中除第一节以外的所有节，将所有页眉和页脚设置为“链接到前一节”。")
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
     ' 如果需要control参数的宏，需要下面做一个Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加

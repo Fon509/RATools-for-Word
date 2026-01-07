@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Onload">
     <ribbon startFromScratch="false">
         <tabs>
             <!-- ==================== 主选项卡 ==================== -->
@@ -72,15 +72,18 @@
 					<box id="boxFormat3" boxStyle="horizontal">
 						<button idMso="PasteSpecialDialog" showLabel="false"/>
                     </box>
-					<separator id="sepFaP1"/>					
-                    <box id="boxQuickSettings" boxStyle="horizontal">
-                        <!-- 内置字号控件：显示当前字号，可直接输入修改 -->
-                        <control idMso="FontSize" showLabel="false"/>                       
-                    </box>
-                    <separator id="sepFaP_New"/>                    
+					<separator id="sepFaP1"/>
                     <box id="boxFont1" boxStyle="horizontal">
                         <toggleButton idMso="Subscript"/>
                         <control idMso="FontColorPicker" showLabel="false"/>
+                        <!-- 一键设为蓝色 -->
+                        <button id="btnTextBlue" 
+                                label="设为蓝色" 
+                                image="SetTextBlue" 
+                                onAction="SetTextBlue" 
+                                showLabel="false" 
+                                screentip="设为蓝色" 
+                                description="将选中的文字颜色设置为标准蓝色"/>
 					</box>
 					<box id="boxFont2" boxStyle="horizontal">
                         <toggleButton idMso="Superscript"/>
@@ -132,7 +135,7 @@
                     </box>
                     <box id="boxBS3" boxStyle="horizontal">
                         <button id="btnFootNoteStyle" label="脚注-F " tag="脚注-F " imageMso="FootnotesEndnotesShow" size="normal" description="应用样式 脚注-F " screentip="脚注-F " showLabel="false" onAction="btnStyle_Click"/>
-						<button id="btnBS7" label="超链接-F" tag="超链接-F" image="Hyperlink" size="normal" description="应用样式 超链接-F" screentip="超链接蓝色-F" showLabel="false" onAction="btnStyle_Click"/>
+						<!-- <button id="btnBS7" label="超链接-F" tag="超链接-F" image="Hyperlink" size="normal" description="应用样式 超链接-F" screentip="超链接蓝色-F" showLabel="false" onAction="btnStyle_Click"/> == -->
 						<button id="btnStylePane" label="样式窗格" tag="样式窗格" imageMso="GroupBlogStyles" size="normal" description="显示/隐藏样式任务窗格 (Alt+Ctrl+Shift+S)" screentip="样式窗格" showLabel="false" onAction="ShowStylePane"/>
                     </box>
                 </group>
