@@ -114,13 +114,46 @@
 
 ## ⬆️ 进阶用法
 
-### 修改.dotx文件实现样式自定义，满足自己独特的样式偏好
+### 1. 修改.dotx文件实现样式自定义
 
+RATools 的样式应用功能依赖于底层的 `.dotx` 模板文件。如果你有独特的样式偏好（如特定的字体、字号或段落间距），可以通过修改模板来实现，从而满足自己独特的样式偏好：
 
+1. 根据你的使用环境，在Word中打开 `master-template-cn.dotx`（中文）或 `master-template-en.dotx`（英文）。
 
-### 创建属于自己的宏并添加至宏列表中
+   <div align="center"> <img src="_image/11_1.png" width=40%/> </div>
+   <div align="center"> <img src="_image/11_2.png" width=100%/> </div>
 
+2. 打开`.dotx` 模板文件后，在Word的「样式」面板中，找到并修改你想要调整的带-F后缀的样式（例如 「正文-F」等）。
 
+   <div align="center"> <img src="_image/11_3.png" width=100%/> </div>
+
+3. 保存并关闭模板文件。
+
+之后使用RATools的样式功能时，插件将自动应用你自定义后的格式标准。
+
+### 2. 创建属于自己的宏并添加至宏列表中 (Add Custom Macros)
+
+RATools 支持扩展。如果你具备 VBA 开发能力，可以将自己的常用脚本集成到工具中：
+
+1. 打开 RATools 的主程序文件（`.dotm`），但是不要直接打开 `D:\RATools`中的`.dotm`文件，可以复制到其他路径打开。
+
+   <div align="center"> <img src="_image/12_1.png" width=100%/> </div>
+
+2. 按 `Alt + F11` 进入 VBA 编辑器。
+
+3. 在工程资源管理器中右键点击「RATools」，选择“插入” -> “模块”，创建一个新的模块。
+
+   <div align="center"> <img src="_image/12_2.png" width=40%/> </div>
+
+4. 编写你的 `Public Sub` 过程（宏代码）。
+
+5. 在「mRibbon」模块中末尾处添加你所创建的宏代码的信息。
+
+   <div align="center"> <img src="_image/12_3.png" width=75%/> </div>
+
+6. 测试无误后左上角保存代码并将保存后的`.dotm`文件移动至 `D:\RATools`，删除之前的版本（注意备份）。
+
+你的自定义宏现在可以通过 Word 的宏列表或 RATools 的宏管理功能进行调用，实现功能的个性化扩展。
 
 ## 📝 交流与反馈
 
