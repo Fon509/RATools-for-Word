@@ -1,5 +1,16 @@
 
 
+# v0.5.6
+
+## RATools.dotm
+
+- 优化样式附加的逻辑。`🛠 优化` (Changed)
+- 修复附加模版时，点击取消后，仍然弹出「未找到默认样式模板」提示的问题。`🐛 修复` (Fixed)
+
+## master-template-en.dotx
+
+- 「Body Text with Indentation-F」样式的缩进调整为首行缩进2字符。`🐛 修复` (Fixed)
+
 # v0.5.5
 
 - 新增宏，将所有页眉和页脚设置为“链接到前一节”。`✨ 新增` (Added)

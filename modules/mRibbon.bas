@@ -104,21 +104,49 @@ Public Sub AttachTemplate(ByVal control As IRibbonControl)
         Exit Sub
     End If
     
-    ' ================= 强 制 清 理 逻 辑 =================
-    ' 导入前删除当前文档中所有以 -F 结尾的样式
+    ' ================= 智 能 清 理 逻 辑 =================
+    ' 目标：
+    ' 1. 清理掉当前文档中多余的 -F 样式（即模板里没有的）。
+    ' 2. 但如果这个多余样式正在被使用，则保留它（防止内容回退为正文）。
+    ' 3. 模板里有的样式，绝对不能删，稍后覆盖即可。
     
     Dim i As Long
     Dim docStyName As String
+    Dim shouldDelete As Boolean
+    Dim vCheck As Variant
     
-    ' 倒序遍历，防止删除时索引错位
+    ' 倒序遍历
     For i = currentDoc.Styles.count To 1 Step -1
         docStyName = currentDoc.Styles(i).NameLocal
         
-        ' 只删除以 -F 结尾的样式
+        ' 只处理以 -F 结尾的样式
         If UCase(Right(docStyName, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX) Then
-            On Error Resume Next
-            currentDoc.Styles(i).Delete
-            On Error GoTo 0
+            
+            shouldDelete = True
+            
+            ' A. 检查是否在待导入名单中？
+            ' 如果在名单里，绝对不能删（直接覆盖即可，删了会断链）
+            For Each vCheck In stylesList
+                If UCase(vCheck) = UCase(docStyName) Then
+                    shouldDelete = False
+                    Exit For
+                End If
+            Next vCheck
+            
+            ' B. 如果不在名单中（即多余样式），再检查是否被使用
+            ' 只有在确认要删除时才进行此检查，节省性能
+            If shouldDelete Then
+                If IsStyleInUse(currentDoc, docStyName) Then
+                    shouldDelete = False ' 正在使用，保留它
+                End If
+            End If
+            
+            ' 执行删除
+            If shouldDelete Then
+                On Error Resume Next
+                currentDoc.Styles(i).Delete
+                On Error GoTo 0
+            End If
         End If
     Next i
     ' ================= 清 理 结 束 =================
@@ -147,6 +175,22 @@ Public Sub AttachTemplate(ByVal control As IRibbonControl)
     MsgBox "操作完成！" & vbCrLf & _
            "已成功导入 " & stylesList.count & " 个样式。", vbInformation, "导入成功"
 End Sub
+
+' 辅助函数：判断样式是否在文档中被使用
+' 利用 Find 查找样式，比 Style.InUse 属性更准确
+Private Function IsStyleInUse(doc As Document, styleName As String) As Boolean
+    On Error Resume Next ' 防止样式名无效报错
+    With doc.Content.Find
+        .ClearFormatting
+        .Text = ""
+        .Style = styleName
+        .Format = True
+        .Forward = True
+        .Wrap = wdFindStop ' 找到一个就停
+        IsStyleInUse = .Execute
+    End With
+    On Error GoTo 0
+End Function
 
 '=====================  智 能 样 式 映 射  =====================
 ' 作用：将 UI 传来的中文标签（如“标题1-F”）转换为文档中实际存在的样式名（可能是“Heading 1-F”）
@@ -371,8 +415,18 @@ End Sub
 
 '样式错误统一提示
 Private Sub HandleStyleErr()
+    ' 5941: 集合成员不存在(样式不存在); 91: 对象变量未设置
     If Err.Number = 5941 Or Err.Number = 91 Then
-        MsgBox "请先加载主模板 dotx！", vbExclamation
+        Dim ans As VbMsgBoxResult
+        ans = MsgBox("当前文档未包含目标样式，请先加载主模板 dotx！" & vbCrLf & vbCrLf & _
+                     "点击【确定】立即加载模板。", vbOKCancel + vbExclamation, "提示")
+        
+        If ans = vbOK Then
+            Err.Clear
+            ' 传入 Nothing，直接触发加载模板的主逻辑
+            ' 此时会进入 GetStyleFilePath，如果找到模板则询问，找不到则进入 PickFile
+            AttachTemplate Nothing
+        End If
     Else
         MsgBox "样式应用失败：" & Err.Description, vbCritical
     End If
@@ -433,8 +487,9 @@ Private Function GetStyleFilePath() As String
             GetStyleFilePath = pathEN
             Exit Function
         Else
-            ' 用户点击取消，进入手动选择
-            GoTo ManualSelect
+            ' 用户点击取消，直接跳转到 PickFile 标签，
+            ' 跳过 ManualSelect 的 "未找到" 提示
+            GoTo PickFile
         End If
         
     ElseIf existCN Then
@@ -451,11 +506,13 @@ Private Function GetStyleFilePath() As String
     ' 如果都不存在，进入下面的手动选择逻辑
 
 ManualSelect:
+    ' 只有当文件真的不存在，或者路径为空时，才应该显示这个提示
     If MsgBox("在工具同级目录下未找到默认样式模板：" & vbCrLf & _
               FILE_NAME_CN & vbCrLf & _
               FILE_NAME_EN & vbCrLf & vbCrLf & _
               "是否手动选择文件？", vbYesNo + vbQuestion) = vbNo Then Exit Function
-    
+
+PickFile: ' 直接进入文件选择
     With Application.FileDialog(msoFileDialogFilePicker)
         .AllowMultiSelect = False
         .Filters.Clear
