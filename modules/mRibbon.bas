@@ -50,150 +50,89 @@ End Sub
 
 '=====================  导 入 样 式  =====================
 ' 说明：双重导入策略，避免后续段落样式丢失，支持 -F 后缀及目录样式
+
+' Ribbon 按钮调用的入口（带成功提示）
 Public Sub AttachTemplate(ByVal control As IRibbonControl)
+    ' 显式调用，显示成功消息
+    ImportStyles isSilent:=False
+End Sub
+
+Public Function ImportStyles(Optional isSilent As Boolean = False) As Boolean
     Dim tmplPath As String
     Dim sourceDoc As Document
     Dim currentDoc As Document
     Dim sty As Style
-    Dim stylesList As New Collection ' 使用集合暂存样式名
+    Dim stylesList As New Collection
     Dim vStyleName As Variant
     Dim pass As Integer
     Dim sName As String
     
     ' 1. 获取路径
     tmplPath = GetStyleFilePath
-    If tmplPath = "" Then Exit Sub
+    If tmplPath = "" Then
+        ImportStyles = False
+        Exit Function
+    End If
     
     Set currentDoc = ActiveDocument
     
-    Application.ScreenUpdating = False ' 关闭屏幕刷新
+    ' 性能优化：关闭屏幕更新，鼠标设为等待状态
+    Application.ScreenUpdating = False
+    System.Cursor = wdCursorWait
     
-    ' 2. 后台打开模版并筛选样式
-    ' 以只读、不可见的方式打开模版文件
+    ' 2. 后台打开模版 (只读/不可见)
     Set sourceDoc = Documents.Open(fileName:=tmplPath, ReadOnly:=True, Visible:=False)
     
     On Error Resume Next
-    
-    ' 遍历模版中的样式，建立“待导入名单”
+    ' 3. 快速筛选：建立待导入名单
     For Each sty In sourceDoc.Styles
         sName = sty.NameLocal
-        
-        ' 判断逻辑：
-        ' 1. 名字以 "-F" 结尾
-        ' 2. 或者 名字以 "TOC" 开头 (兼容 TOC 1, TOC 2...)
-        ' 3. 或者 名字包含 "图表目录"或 "Table of Figures"
+        ' 仅匹配 -F 结尾 或 TOC/图表目录 相关
         If (UCase(Right(sName, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX)) Or _
            (UCase(Left(sName, 3)) = "TOC") Or _
            (InStr(sName, "图表目录") > 0) Or _
            (InStr(sName, "Table of Figures") > 0) Then
-            
-            ' 将符合条件的样式名加入集合
             stylesList.Add sName
         End If
     Next sty
     
-    ' 在获取完名单后，立即关闭模版。
-    ' 这样 OrganizerCopy 在运行时，文件是关闭状态，就不会产生冲突。
+    ' 获取完名单立即关闭模版，释放内存
     sourceDoc.Close SaveChanges:=wdDoNotSaveChanges
     Set sourceDoc = Nothing
     
-    ' 如果没有找到任何样式，退出
     If stylesList.count = 0 Then
+        System.Cursor = wdCursorNormal ' 恢复鼠标
         Application.ScreenUpdating = True
-        MsgBox "模版中没有找到符合条件（-F 或 TOC）的样式。", vbExclamation
-        Exit Sub
+        If Not isSilent Then MsgBox "模版中没有找到符合条件（-F 或 TOC）的样式。", vbExclamation
+        ImportStyles = False
+        Exit Function
     End If
-    
-    ' ================= 智 能 清 理 逻 辑 =================
-    ' 目标：
-    ' 1. 清理掉当前文档中多余的 -F 样式（即模板里没有的）。
-    ' 2. 但如果这个多余样式正在被使用，则保留它（防止内容回退为正文）。
-    ' 3. 模板里有的样式，绝对不能删，稍后覆盖即可。
-    
-    Dim i As Long
-    Dim docStyName As String
-    Dim shouldDelete As Boolean
-    Dim vCheck As Variant
-    
-    ' 倒序遍历
-    For i = currentDoc.Styles.count To 1 Step -1
-        docStyName = currentDoc.Styles(i).NameLocal
-        
-        ' 只处理以 -F 结尾的样式
-        If UCase(Right(docStyName, Len(TARGET_SUFFIX))) = UCase(TARGET_SUFFIX) Then
-            
-            shouldDelete = True
-            
-            ' A. 检查是否在待导入名单中？
-            ' 如果在名单里，绝对不能删（直接覆盖即可，删了会断链）
-            For Each vCheck In stylesList
-                If UCase(vCheck) = UCase(docStyName) Then
-                    shouldDelete = False
-                    Exit For
-                End If
-            Next vCheck
-            
-            ' B. 如果不在名单中（即多余样式），再检查是否被使用
-            ' 只有在确认要删除时才进行此检查，节省性能
-            If shouldDelete Then
-                If IsStyleInUse(currentDoc, docStyName) Then
-                    shouldDelete = False ' 正在使用，保留它
-                End If
-            End If
-            
-            ' 执行删除
-            If shouldDelete Then
-                On Error Resume Next
-                currentDoc.Styles(i).Delete
-                On Error GoTo 0
-            End If
-        End If
-    Next i
-    ' ================= 清 理 结 束 =================
-    
-    ' 3. 执行“双重导入”策略
-    ' 第一遍：创建样式实体（此时基于 BaseOn 的链接可能会断裂）
-    ' 第二遍：覆盖样式定义（修复链接关系）
-    
-    ' 注意：这里 Source 使用的是 tmplPath (字符串路径)，而不是 sourceDoc.FullName
+       
+    ' 4. 执行导入 (保留双重导入以修复 BasedOn 链接)
+    ' 虽然双重导入会多花一点时间，但为了样式层级关系的正确性，这步不能省。
     For pass = 1 To 2
         For Each vStyleName In stylesList
-            ' 增加容错，防止某个样式复制失败卡死整个循环
             On Error Resume Next
-            Application.OrganizerCopy _
-                Source:=tmplPath, _
-                Destination:=currentDoc.FullName, _
-                Name:=vStyleName, _
-                Object:=wdOrganizerObjectStyles
+            Application.OrganizerCopy Source:=tmplPath, Destination:=currentDoc.FullName, _
+                Name:=vStyleName, Object:=wdOrganizerObjectStyles
             On Error GoTo 0
         Next vStyleName
     Next pass
     
+    ' 恢复状态
+    System.Cursor = wdCursorNormal
     Application.ScreenUpdating = True
     
-    ' 5. 反馈结果
-    MsgBox "操作完成！" & vbCrLf & _
-           "已成功导入 " & stylesList.count & " 个样式。", vbInformation, "导入成功"
-End Sub
-
-' 辅助函数：判断样式是否在文档中被使用
-' 利用 Find 查找样式，比 Style.InUse 属性更准确
-Private Function IsStyleInUse(doc As Document, styleName As String) As Boolean
-    On Error Resume Next ' 防止样式名无效报错
-    With doc.Content.Find
-        .ClearFormatting
-        .Text = ""
-        .Style = styleName
-        .Format = True
-        .Forward = True
-        .Wrap = wdFindStop ' 找到一个就停
-        IsStyleInUse = .Execute
-    End With
-    On Error GoTo 0
+    ' 仅在非静默模式下弹窗
+    If Not isSilent Then
+        MsgBox "操作完成！已成功导入 " & stylesList.count & " 个样式。", vbInformation, "导入成功"
+    End If
+    
+    ImportStyles = True
 End Function
 
 '=====================  智 能 样 式 映 射  =====================
-' 作用：将 UI 传来的中文标签（如“标题1-F”）转换为文档中实际存在的样式名（可能是“Heading 1-F”）
+' 作用：将 UI 传来的中文标签（如“标题1-F”）转换为文档中实际存在的样式名
 Private Function GetTargetStyleName(ByVal uiTagName As String) As String
     Dim doc As Document
     Set doc = ActiveDocument
@@ -664,6 +603,16 @@ Public Function GetMyMacroRegistry() As Variant
     items.Add Array("LinkToThePreviousSection", _
                     "页眉和页脚设置为“链接到前一节”", _
                     "遍历文档中除第一节以外的所有节，将所有页眉和页脚设置为“链接到前一节”。")
+                    
+    ' 第11个
+    items.Add Array("RemoveUnusedStyles", _
+                    "清理未使用的模板样式", _
+                    "一键清理文档中所有未被使用的自定义样式（仅针对以 -F 结尾的样式），保持文档整洁。")
+                    
+    ' 第12个
+    items.Add Array("BatchDetectHighlights", _
+                    "批量检测高亮内容", _
+                    "检测文档是否有突出显示颜色的内容，在最终clean前进行调整。")
                     
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
     ' 如果需要control参数的宏，需要下面做一个Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加
