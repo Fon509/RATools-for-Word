@@ -614,6 +614,11 @@ Public Function GetMyMacroRegistry() As Variant
                     "批量检测高亮内容", _
                     "检测文档是否有突出显示颜色的内容，在最终clean前进行调整。")
                     
+    ' 第13个
+    items.Add Array("ExtractAbbreviations", _
+                    "提取缩略语", _
+                    "利用了Word内置的通配符功能提取全大写英文缩略语。")
+                    
     ' 如果以后要加新宏，直接复制粘贴即可，无需修改其他地方
     ' 如果需要control参数的宏，需要下面做一个Wrapper，见下面Wrapper包装器下的内容，同时需要在上面添加
     
