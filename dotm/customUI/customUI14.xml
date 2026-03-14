@@ -82,7 +82,7 @@
                                 image="SetTextBlue" 
                                 onAction="SetTextBlue" 
                                 showLabel="false" 
-                                screentip="设为蓝色" 
+                                screentip="将选中的文字颜色设置为标准蓝色" 
                                 description="将选中的文字颜色设置为标准蓝色"/>
 					</box>
 					<box id="boxFont2" boxStyle="horizontal">
@@ -252,6 +252,19 @@
                 <!-- == 常用宏 == -->
 				<group id="grpMyMacro" label="宏列表">
 					<button id="btnShowMacros" imageMso="MacroPlay" size="large" showLabel="false" onAction="ShowMacroListWindow" />
+				</group>
+
+                <!-- == 其他 == -->
+				<group id="grpOther" label="其他">
+				    <!-- 打开文件夹按钮 -->
+					<button id="btnOpenFolder" 
+                            label="打开所在文件夹" 
+                            imageMso="Folder" 
+                            size="normal" 
+                            description="打开文件所在文件夹" 
+                            screentip="打开文件所在文件夹" 
+                            showLabel="false" 
+                            onAction="OpenDocumentFolder" />
 				</group>
 				
             </tab>

@@ -3,7 +3,7 @@ Option Explicit
 
 ' =============================================
 ' 宏名称：BatchAcceptAndClean
-' 功能：将tracking版转换为clean版，接受所有修订并停止修订同时删除文档中的所有批注
+' 功能：Word文档批量清理工具
 ' =============================================
 
 ' === 主程序入口 ===
@@ -20,7 +20,7 @@ Sub BatchAcceptAndClean()
                        "1 - 【当前文档】处理当前打开的文档" & vbCrLf & _
                        "2 - 【文件模式】选择单个或多个文件" & vbCrLf & _
                        "3 - 【文件夹模式】递归处理文件夹", _
-                       "WordCleaner", "1")
+                       "Word批量清理工具", "1")
     
     If StrPtr(strMode) = 0 Or strMode = "" Then Exit Sub
     
@@ -91,17 +91,15 @@ ErrorHandler:
     Resume ExitHandler
 End Sub
 
-' === 模块：处理单个文件 ===
+' === 模块：处理单个文件 (后台模式 Visible=False) ===
 Sub ProcessFile(filePath As String)
     Dim doc As Document
     On Error Resume Next
     
-    ' 后台模式打开
+    ' 后台模式：Visible:=False 提升速度
     Set doc = Documents.Open(fileName:=filePath, Visible:=False, AddToRecentFiles:=False)
     
     If Err.Number = 0 Then
-        ' 关键修复：确保文档完全加载后再处理
-        DoEvents
         Call DeepCleanDocument(doc)
         doc.Save
         doc.Close
@@ -111,89 +109,82 @@ Sub ProcessFile(filePath As String)
     On Error GoTo 0
 End Sub
 
-' === 模块：深度清理逻辑（核心修复） ===
+' === 模块：清理逻辑 ===
 Sub DeepCleanDocument(doc As Document)
     Dim rng As Range
     Dim storyIndex As Variant
-    Dim commentObj As Comment  ' 新增：用于遍历批注对象
-    Dim shp As Shape
-    Dim frm As Frame
-    
-    ' 仅遍历核心文本区域
+    Dim commentRetry As Integer ' 批注删除重试计数器
+    ' 仅遍历核心区域，跳过无效区域
+    ' 1=MainText, 2=Footnotes, 3=Endnotes, 5=Comments(虽删但需查), 6-11=Headers/Footers
     Dim targetStories As Variant
-    targetStories = Array(1, 2, 3, 6, 7, 8, 9, 10, 11)
+    targetStories = Array(1, 2, 3, 5, 6, 7, 8, 9, 10, 11)
     
     With doc
-        ' 1. 解除文档保护
-        If .ProtectionType <> wdNoProtection Then
-            On Error Resume Next
-            .Unprotect
-            If Err.Number <> 0 Then
-                Debug.Print "无法解除保护: " & .Name
-                Err.Clear
-            End If
-            On Error GoTo 0
-        End If
+        ' 1. 解除文档保护 (仅当被保护时才执行)
+        If .ProtectionType <> wdNoProtection Then .Unprotect
 
-        ' 2. 接受所有修订
+        ' 2. 全局快速清理 (处理大部分简单修订)
         On Error Resume Next
         .Revisions.AcceptAll
         On Error GoTo 0
 
-        ' 3. 清理核心Story区域
+        ' 强力循环删除所有批注 (解决带有答复的"现代批注"需要逐层剥离的问题)
+        commentRetry = 0
+        Do While .Comments.count > 0 And commentRetry < 20
+            On Error Resume Next
+            .DeleteAllComments
+            On Error GoTo 0
+            commentRetry = commentRetry + 1
+        Loop
+
+        ' 3. 链式遍历核心 Story (移除 Sections 循环，大幅提速)
         For Each storyIndex In targetStories
             On Error Resume Next
             Set rng = .StoryRanges(storyIndex)
             On Error GoTo 0
             
-            If Not rng Is Nothing Then
-                Do While Not rng Is Nothing
-                    Call CleanSingleRange(rng)
-                    Set rng = rng.NextStoryRange
-                Loop
-            End If
+            ' NextStoryRange 会自动跳转到下一节的同类区域
+            Do While Not rng Is Nothing
+                Call CleanSingleRange(rng)
+                Set rng = rng.NextStoryRange
+            Loop
         Next storyIndex
         
-        ' 4. 直接遍历Comments集合删除批注
-        ' 这是唯一能确保所有批注被删除的方法
-        On Error Resume Next
-        If .Comments.count > 0 Then
-            ' 方法A：逐个删除（最可靠）
-            For Each commentObj In .Comments
-                commentObj.Delete
-            Next commentObj
-            
-            ' 方法B：一次性删除（备选）
-            ' .DeleteAllComments
-        End If
-        On Error GoTo 0
+        ' 4. 确保嵌套极深的残留批注被彻底删除
+        commentRetry = 0
+        Do While .Comments.count > 0 And commentRetry < 20
+            On Error Resume Next
+            .DeleteAllComments
+            On Error GoTo 0
+            commentRetry = commentRetry + 1
+        Loop
         
         ' 5. 结束设置
         .TrackRevisions = False
     End With
 End Sub
 
-' === 模块：清理单个 Range ===
+' === 模块：清理单个 Range (按需执行) ===
 Sub CleanSingleRange(rng As Range)
     Dim shp As Shape
     Dim frm As Frame
     
     On Error Resume Next
     
-    ' A. 解锁域
+    ' A. 智能解锁域 (仅当存在域时才操作)
     If rng.Fields.count > 0 Then rng.Fields.Locked = False
     
     ' B. 接受修订
     rng.Revisions.AcceptAll
     
-    ' C. 清理 Shapes
+    ' C. 递归清理 Shapes (仅当存在Shape时才进入循环)
     If rng.ShapeRange.count > 0 Then
         For Each shp In rng.ShapeRange
             Call ProcessShapeRecursively(shp)
         Next
     End If
     
-    ' D. 清理 Frames
+    ' D. 清理 Frames (仅当存在Frame时才进入循环)
     If rng.Frames.count > 0 Then
         For Each frm In rng.Frames
             If frm.Range.Fields.count > 0 Then frm.Range.Fields.Locked = False
@@ -213,20 +204,20 @@ Sub ProcessShapeRecursively(shp As Shape)
     ' 1. 文本框内容
     If Not shp.TextFrame Is Nothing Then
         If shp.TextFrame.HasText Then
-            If shp.TextFrame.TextRange.Fields.count > 0 Then _
-                shp.TextFrame.TextRange.Fields.Locked = False
+            ' 仅解锁和接受
+            If shp.TextFrame.TextRange.Fields.count > 0 Then shp.TextFrame.TextRange.Fields.Locked = False
             shp.TextFrame.TextRange.Revisions.AcceptAll
         End If
     End If
     
-    ' 2. 组合图形
+    ' 2. 组合图形 (Group)
     If shp.Type = msoGroup Then
         For Each subShp In shp.GroupItems
             Call ProcessShapeRecursively(subShp)
         Next
     End If
     
-    ' 3. 画布
+    ' 3. 画布 (Canvas)
     If shp.Type = msoCanvas Then
         For Each subShp In shp.CanvasItems
             Call ProcessShapeRecursively(subShp)

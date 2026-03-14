@@ -297,6 +297,29 @@ Public Sub SetTextBlue(control As IRibbonControl)
     Selection.Font.Color = wdColorBlue
 End Sub
 
+'================  打开文件所在文件夹  ================
+Public Sub OpenDocumentFolder(control As IRibbonControl)
+        
+    ' 1. 声明一个变量，用来临时存储文档的路径
+    Dim docPath As String
+    
+    ' 2. 获取当前活动文档的路径
+    docPath = ActiveDocument.Path
+    
+    ' 3. 检查文档是否已经保存过（如果没有保存过，路径会是空的）
+    If docPath = "" Then
+        ' 弹出一个消息框提醒用户
+        MsgBox "这个文档还没有保存过哦！请先保存文档，然后再尝试打开所在文件夹。", vbExclamation, "温馨提示"
+        ' 停止运行后面的代码
+        Exit Sub
+    End If
+    
+    ' 4. 如果路径存在，使用 Windows 资源管理器打开该路径
+    ' explorer.exe 是 Windows 自带的文件夹管理程序
+    Shell "explorer.exe """ & docPath & """", vbNormalFocus
+    
+End Sub
+
 '=====================  私 有 过 程  =====================
 ' 确保加载逻辑支持版本号匹配
 Private Function EnsureMainTemplate() As Boolean
