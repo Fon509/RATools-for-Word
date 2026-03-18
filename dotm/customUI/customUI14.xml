@@ -265,6 +265,14 @@
                             screentip="打开文件所在文件夹" 
                             showLabel="false" 
                             onAction="OpenDocumentFolder" />
+					<button id="btnProtectFieldFormat" 
+                            label="保护域代码格式" 
+                            imageMso="ProtectDocument" 
+                            size="normal" 
+                            description="扫描全文或选区内的引用域，自动添加 \* MERGEFORMAT 开关，防止更新域后格式丢失。" 
+                            screentip="扫描全文或选区内的引用域，自动添加 \* MERGEFORMAT 开关，防止更新域后格式丢失。" 
+                            showLabel="false" 
+                            onAction="ProtectFieldFormat" />
 				</group>
 				
             </tab>

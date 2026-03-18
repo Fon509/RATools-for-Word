@@ -27,25 +27,35 @@ Sub BatchConvertWordToPDF()
 
     ' 让用户输入模式编号
     modeInput = InputBox("请输入模式编号：" & vbCrLf & vbCrLf & _
-                         "1 - 【当前文档】处理当前打开的文档" & vbCrLf & _
-                         "2 - 【文件模式】选择单个或多个文件" & vbCrLf & _
-                         "3 - 【文件夹模式】递归处理文件夹", _
-                         "批量Word转PDF", "1")
+                         "1 - 【当前文档】刷新整个目录" & vbCrLf & _
+                         "2 - 【当前文档】仅刷新页码" & vbCrLf & _
+                         "3 - 【文件模式】单个或多个文件" & vbCrLf & _
+                         "4 - 【文件夹模式】文件夹中所有文档", _
+                         "Word转PDF - 模式选择", "1")
                          
     If modeInput = "" Then GoTo Cleanup ' 用户点击取消或未输入
 
     Select Case modeInput
         Case "1"
-            ' --- 模式1：当前文档 ---
+            ' --- 模式1：当前文档（刷新整个目录） ---
             If Documents.count > 0 Then
-                ConvertActiveDocument
+                ConvertActiveDocument 1
             Else
                 MsgBox "当前没有打开的文档！", vbExclamation
                 GoTo Cleanup
             End If
             
         Case "2"
-            ' --- 模式2：多文件 ---
+            ' --- 模式2：当前文档（仅刷新页码） ---
+            If Documents.count > 0 Then
+                ConvertActiveDocument 2
+            Else
+                MsgBox "当前没有打开的文档！", vbExclamation
+                GoTo Cleanup
+            End If
+            
+        Case "3"
+            ' --- 模式3：多文件 ---
             With Application.FileDialog(msoFileDialogFilePicker)
                 .Title = "请选择一个或多个Word文档"
                 .Filters.Clear
@@ -58,8 +68,8 @@ Sub BatchConvertWordToPDF()
                 Next i
             End With
             
-        Case "3"
-            ' --- 模式3：文件夹 ---
+        Case "4"
+            ' --- 模式4：文件夹 ---
             With Application.FileDialog(msoFileDialogFolderPicker)
                 .Title = "请选择包含Word文档的文件夹"
                 If .Show <> -1 Then GoTo Cleanup
@@ -71,7 +81,7 @@ Sub BatchConvertWordToPDF()
             End If
             
         Case Else
-            MsgBox "输入无效，请输入 1、2 或 3。", vbExclamation
+            MsgBox "输入无效，请输入 1、2、3 或 4。", vbExclamation
             GoTo Cleanup
     End Select
     
@@ -79,15 +89,15 @@ Sub BatchConvertWordToPDF()
     Application.ScreenUpdating = True
     
     ' --- 结果反馈 ---
-    If modeInput = "1" Then
-        ' 模式1：直接提示完成，不询问报告，符合“直接关闭对话框”的需求
+    If modeInput = "1" Or modeInput = "2" Then
+        ' 模式1和2：直接提示完成，不询问报告，符合“直接关闭对话框”的需求
         ' 只有当有成功或失败计数时才弹窗。如果因为未保存文档退出(success=0, fail=0)，则不重复弹窗。
         If successCount > 0 Or failCount > 0 Then
             MsgBox "当前文档处理完成！" & vbCrLf & _
                    IIf(failCount > 0, "注意：转换失败。", "转换成功，PDF已保存在同级目录下。"), vbInformation
         End If
     Else
-        ' 模式2和3：询问是否查看报告
+        ' 模式3和4：询问是否查看报告
         viewReport = MsgBox("处理完成！" & vbCrLf & _
                             "成功: " & successCount & " 个" & vbCrLf & _
                             "失败: " & failCount & " 个" & vbCrLf & vbCrLf & _
@@ -116,8 +126,8 @@ ErrorHandler:
     Resume Cleanup
 End Sub
 
-' 新增：专门处理当前活动文档的函数
-Sub ConvertActiveDocument()
+' 专门处理当前活动文档的函数
+Sub ConvertActiveDocument(updateType As Integer)
     Dim doc As Document
     Dim fso As Object
     Dim pdfFileName As String
@@ -135,18 +145,35 @@ Sub ConvertActiveDocument()
         Exit Sub
     End If
     
-    ' 刷新目录
-    If doc.TablesOfContents.count > 0 Then
-        For Each toc In doc.TablesOfContents
-            toc.Update
-        Next toc
-    End If
-    
-    ' 刷新图表目录
-    If doc.TablesOfFigures.count > 0 Then
-        For Each tof In doc.TablesOfFigures
-            tof.Update
-        Next tof
+    ' 根据传入的模式类型更新目录
+    If updateType = 1 Then
+        ' 刷新整个目录
+        If doc.TablesOfContents.count > 0 Then
+            For Each toc In doc.TablesOfContents
+                toc.Update
+            Next toc
+        End If
+        
+        ' 刷新图表整个目录
+        If doc.TablesOfFigures.count > 0 Then
+            For Each tof In doc.TablesOfFigures
+                tof.Update
+            Next tof
+        End If
+    ElseIf updateType = 2 Then
+        ' 仅刷新目录页码，保留格式
+        If doc.TablesOfContents.count > 0 Then
+            For Each toc In doc.TablesOfContents
+                toc.UpdatePageNumbers
+            Next toc
+        End If
+        
+        ' 仅刷新图表目录页码，保留格式
+        If doc.TablesOfFigures.count > 0 Then
+            For Each tof In doc.TablesOfFigures
+                tof.UpdatePageNumbers
+            Next tof
+        End If
     End If
     
     ' 构建PDF路径
@@ -200,7 +227,7 @@ Sub ProcessFolderWithSubfolders(folderPath As String)
     Set mainFolder = Nothing
 End Sub
 
-' 【核心功能】处理单个文件：打开 -> 刷新目录 -> 导出 -> 关闭
+' 处理单个文件：打开 -> 刷新目录 -> 导出 -> 关闭
 Sub ConvertOneFile(filePath As String)
     Dim doc As Document
     Dim fso As Object
@@ -245,7 +272,7 @@ Sub ConvertOneFile(filePath As String)
         CreateBookmarks:=wdExportCreateHeadingBookmarks, _
         DocStructureTags:=True
     
-    ' 关闭文档（不保存对原Word的更改，因为我们只是为了生成PDF才更新了目录）
+    ' 关闭文档（不保存对原Word的更改，因为只是为了生成PDF才更新了目录）
     doc.Close SaveChanges:=wdDoNotSaveChanges
     
     ' 记录成功日志
