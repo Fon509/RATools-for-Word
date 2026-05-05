@@ -665,3 +665,6 @@ Public Sub Wrapper_ProtectFieldFormat()
     ProtectFieldFormat Nothing
 End Sub
 
+Public Sub Wrapper_RenameCurrentDocument(control As IRibbonControl)
+    RenameCurrentDocument
+End Sub

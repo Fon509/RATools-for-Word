@@ -14,6 +14,22 @@
 
 <div align="center"> <img src="_image/0.png" width=100%/> </div>
 
+## 🧱 项目结构与开发说明
+
+本项目结构如下：
+
+- `dotm/`：存放 `.dotm` 插件解包后的主要内容，包括 `vbaProject.bin`、Ribbon XML、自定义图片资源等，是插件的核心载体。
+- `modules/`：存放从 `vbaProject.bin` 导出的标准模块代码（`.bas`），便于阅读、搜索和版本对比。
+- `class_modules/`：存放从 `vbaProject.bin` 导出的类模块代码（`.cls`），主要用于事件和对象封装。
+- `userforms/`：存放从 `vbaProject.bin` 导出的窗体文件（`.frm/.frx`），用于宏管理器等界面功能。
+- `template/`：存放可供插件加载的 Word 样式模板（`.dotx`），用于统一文档格式。
+
+为避免源码与实际插件内容不一致，开发时遵循以下约定：
+
+- 所有功能修改优先在 Word 的 VBA 工程中完成。
+- 修改完成后，将最新 VBA 代码导出并同步到 `modules/`、`class_modules/`、`userforms/` 目录。
+- 发布前确认导出源码与 `dotm` 中的实际工程保持一致。
+
 ## ⚙️ 安装与配置
 
 为了确保插件正常运行，请严格按照以下步骤进行配置。

@@ -265,6 +265,14 @@
                             screentip="打开文件所在文件夹" 
                             showLabel="false" 
                             onAction="OpenDocumentFolder" />
+					<button id="btnRenameCurrentDocument" 
+                            label="重命名当前文件" 
+                            imageMso="FileSaveAsWordDocx" 
+                            size="normal" 
+                            description="重命名当前已打开的文档" 
+                            screentip="重命名当前文件" 
+                            showLabel="false" 
+                            onAction="Wrapper_RenameCurrentDocument" />                            
 					<button id="btnProtectFieldFormat" 
                             label="保护域代码格式" 
                             imageMso="ProtectDocument" 
