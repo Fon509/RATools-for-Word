@@ -272,7 +272,7 @@
                             description="重命名当前已打开的文档" 
                             screentip="重命名当前文件" 
                             showLabel="false" 
-                            onAction="Wrapper_RenameCurrentDocument" />                            
+                            onAction="Wrapper_RenameCurrentDocument" />
 					<button id="btnProtectFieldFormat" 
                             label="保护域代码格式" 
                             imageMso="ProtectDocument" 
@@ -281,6 +281,14 @@
                             screentip="扫描全文或选区内的引用域，自动添加 \* MERGEFORMAT 开关，防止更新域后格式丢失。" 
                             showLabel="false" 
                             onAction="ProtectFieldFormat" />
+					<button id="btnCheckForUpdates"
+                            label="检查更新"
+                            imageMso="Refresh"
+                            size="normal"
+                            description="检查 RATools 是否有可用的新版本"
+                            screentip="检查新版本"
+                            showLabel="false"
+                            onAction="Wrapper_CheckForUpdates" />
 				</group>
 				
             </tab>
